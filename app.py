@@ -26,7 +26,12 @@ def admin_required(vue):
     return vue_protegee
 @app.route("/")
 def accueil():
-    return render_template("index.html")
+    lieux = db.get_db().execute(
+        "SELECT lieu.*, categorie.nom AS categorie "
+        "FROM lieu JOIN categorie ON lieu.categorie_id = categorie.id "
+        "ORDER BY lieu.id DESC"
+    ).fetchall()
+    return render_template("index.html", lieux=lieux)
 
 
 @app.route("/inscription", methods=["GET", "POST"])

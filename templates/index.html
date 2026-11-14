@@ -1,8 +1,29 @@
 {% extends "base.html" %}
 
+{% block titre %}Wanderly - Découvrez la Tunisie{% endblock %}
+
 {% block contenu %}
-<div class="container py-5">
-  <h1>Où sortir aujourd'hui ?</h1>
-  <p>Bienvenue sur Wanderly.</p>
+<div class="container my-5">
+  <h1 class="h2 wander-text mb-1">Découvrez la Tunisie</h1>
+  <p class="text-secondary mb-4">Des lieux à explorer, un endroit à la fois.</p>
+
+  {% if lieux %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for lieu in lieux %}
+    <div class="col">
+      <div class="card carte-lieu h-100">
+        <div class="card-body">
+          <span class="badge-wander">{{ lieu.categorie }}</span>
+          <h2 class="h5 mt-2">{{ lieu.nom }}</h2>
+          <p class="text-secondary small mb-2">{{ lieu.region }} · {{ lieu.budget }}</p>
+          <p class="card-text">{{ lieu.description }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>Aucun lieu pour le moment.</p>
+  {% endif %}
 </div>
 {% endblock %}

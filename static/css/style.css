@@ -36,3 +36,22 @@ body {
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
 }
+/* Cartes des lieux */
+.carte-lieu {
+  border: 1px solid #E3D9F2;
+  border-radius: 1rem;
+  background: #FFFFFF;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.carte-lieu:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(107, 76, 154, 0.15);
+}
+.badge-wander {
+  background: #EFE8F8;
+  color: #6B4C9A;
+  border-radius: 50rem;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
