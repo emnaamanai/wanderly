@@ -5,7 +5,9 @@
 {% block contenu %}
 <div class="container my-5" style="max-width: 480px;">
   <h1 class="h3 wander-text mb-4">Créer un compte</h1>
-
+  {% if erreur %}
+  <div class="alert-wander mb-3">{{ erreur }}</div>
+  {% endif %}
   <form method="post">
     <div class="mb-3">
   <label for="pseudo" class="form-label">Pseudo</label>
