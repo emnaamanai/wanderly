@@ -1,6 +1,6 @@
 import sqlite3
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, g
+from flask import Flask, render_template, request, redirect, url_for, session, g,abort
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -15,7 +15,15 @@ def login_required(vue):
             return redirect(url_for("connexion"))
         return vue(**kwargs)
     return vue_protegee
-
+def admin_required(vue):
+    @wraps(vue)
+    def vue_protegee(**kwargs):
+        if g.utilisateur is None:
+            return redirect(url_for("connexion"))
+        if g.utilisateur["role"] != "admin":
+            abort(403)
+        return vue(**kwargs)
+    return vue_protegee
 @app.route("/")
 def accueil():
     return render_template("index.html")
@@ -32,7 +40,7 @@ def inscription():
 
         base = db.get_db()
         try:
-            base.execute(
+            curseur = base.execute(
                 "INSERT INTO utilisateur (pseudo, email, mot_de_passe_hash) VALUES (?, ?, ?)",
                 (pseudo, email, mot_de_passe_hash),
             )
@@ -41,11 +49,11 @@ def inscription():
             erreur = "Ce pseudo ou cet e-mail est déjà utilisé."
             return render_template("inscription.html", erreur=erreur)
 
+        session.clear()
+        session["utilisateur_id"] = curseur.lastrowid
         return redirect(url_for("accueil"))
 
     return render_template("inscription.html")
-
-
 @app.route("/connexion", methods=["GET", "POST"])
 def connexion():
     if request.method == "POST":
@@ -88,3 +96,7 @@ def deconnexion():
 @login_required
 def profil():
     return render_template("profil.html")
+@app.route("/admin")
+@admin_required
+def admin():
+    return render_template("admin.html")
