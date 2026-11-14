@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block titre %}Inscription - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 480px;">
+  <h1 class="h3 wander-text mb-4">Créer un compte</h1>
+
+  <form method="post">
+    <div class="mb-3">
+  <label for="pseudo" class="form-label">Pseudo</label>
+  <input type="text" class="form-control" id="pseudo" name="pseudo" required>
+</div>
+    <div class="mb-3">
+      <label for="email" class="form-label">E-mail</label>
+      <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <div class="mb-3">
+      <label for="mot_de_passe" class="form-label">Mot de passe</label>
+      <input type="password" class="form-control" id="mot_de_passe" name="mot_de_passe" required>
+    </div>
+    <button type="submit" class="btn btn-wander w-100">S'inscrire</button>
+  </form>
+</div>
+{% endblock %}
