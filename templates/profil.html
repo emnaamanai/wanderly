@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block titre %}Mon profil - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 480px;">
+  <h1 class="h3 wander-text mb-4">Mon profil</h1>
+  <p><strong>Pseudo :</strong> {{ g.utilisateur.pseudo }}</p>
+  <p><strong>E-mail :</strong> {{ g.utilisateur.email }}</p>
+  <p><strong>Inscrit depuis :</strong> {{ g.utilisateur.date_inscription }}</p>
+</div>
+{% endblock %}

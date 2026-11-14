@@ -1,4 +1,5 @@
 import sqlite3
+from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -7,7 +8,13 @@ app.secret_key = "wanderly-cle-secrete-a-changer-123"
 
 import db
 db.init_app(app)
-
+def login_required(vue):
+    @wraps(vue)
+    def vue_protegee(**kwargs):
+        if g.utilisateur is None:
+            return redirect(url_for("connexion"))
+        return vue(**kwargs)
+    return vue_protegee
 
 @app.route("/")
 def accueil():
@@ -77,3 +84,7 @@ def charger_utilisateur():
 def deconnexion():
     session.clear()
     return redirect(url_for("accueil"))
+@app.route("/profil")
+@login_required
+def profil():
+    return render_template("profil.html")

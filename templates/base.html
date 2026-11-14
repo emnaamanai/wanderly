@@ -14,7 +14,7 @@
       <a class="navbar-brand fw-bold wander-text" href="{{ url_for('accueil') }}">Wanderly</a>
       <div>
   {% if g.utilisateur %}
-    <span class="me-2">Bonjour, <strong class="wander-text">{{ g.utilisateur.pseudo }}</strong></span>
+    <a class="me-2 text-decoration-none" href="{{ url_for('profil') }}">Bonjour, <strong class="wander-text">{{ g.utilisateur.pseudo }}</strong></a>
     <a class="btn btn-wander" href="{{ url_for('deconnexion') }}">Déconnexion</a>
   {% else %}
     <a class="btn btn-link" href="{{ url_for('connexion') }}">Connexion</a>
