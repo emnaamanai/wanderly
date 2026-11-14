@@ -1,0 +1,30 @@
+/* Couleurs de Wanderly : violet + couleurs neutres */
+:root {
+  --violet: #6B4C9A;
+  --violet-fonce: #5A3E85;
+  --lilas: #EFE8F8;
+  --texte: #2B2540;
+  --fond: #FAF8FC;
+}
+
+body {
+  background: var(--fond);
+  color: var(--texte);
+}
+
+.wander-text {
+  color: var(--violet);
+}
+
+/* Bouton principal violet */
+.btn-wander {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: white;
+  border-radius: 50rem;
+}
+.btn-wander:hover {
+  background: var(--violet-fonce);
+  border-color: var(--violet-fonce);
+  color: white;
+}

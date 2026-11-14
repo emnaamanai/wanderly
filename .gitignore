@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+wanderly.db
+.vscode/
+static/uploads/
