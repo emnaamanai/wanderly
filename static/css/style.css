@@ -55,3 +55,9 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
 }
+/* Barre de filtres */
+.filtres-wander {
+  background: #EFE8F8;
+  border-radius: 1rem;
+  padding: 1rem;
+}

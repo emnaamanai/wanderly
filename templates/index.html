@@ -7,6 +7,40 @@
   <h1 class="h2 wander-text mb-1">Découvrez la Tunisie</h1>
   <p class="text-secondary mb-4">Des lieux à explorer, un endroit à la fois.</p>
 
+  <form method="get" class="filtres-wander mb-2">
+    <div class="row g-2">
+      <div class="col-12 col-md-3">
+        <select name="categorie" class="form-select">
+          <option value="">Toutes les catégories</option>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {% if categorie_id == c.id|string %}selected{% endif %}>{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="region" class="form-select">
+          <option value="">Toutes les régions</option>
+          {% for r in gouvernorats %}
+          <option value="{{ r }}" {% if region == r %}selected{% endif %}>{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <input type="number" name="prix_min" class="form-control" min="0" step="1"
+               placeholder="Prix min (DT)" value="{{ prix_min }}">
+      </div>
+      <div class="col-6 col-md-2">
+        <input type="number" name="prix_max" class="form-control" min="0" step="1"
+               placeholder="Prix max (DT)" value="{{ prix_max }}">
+      </div>
+      <div class="col-12 col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-wander flex-grow-1">Filtrer</button>
+        <a href="{{ url_for('accueil') }}" class="btn btn-link">Effacer</a>
+      </div>
+    </div>
+  </form>
+  <p class="text-secondary small mb-4">Prix les plus élevés : jusqu'à {{ "%g"|format(prix_le_plus_haut) }} DT par personne.</p>
+
   {% if lieux %}
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for lieu in lieux %}
@@ -15,7 +49,7 @@
         <div class="card-body">
           <span class="badge-wander">{{ lieu.categorie }}</span>
           <h2 class="h5 mt-2">{{ lieu.nom }}</h2>
-          <p class="text-secondary small mb-2">{{ lieu.region }} · {{ lieu.budget }}</p>
+          <p class="text-secondary small mb-2">{{ lieu.region }} · {% if lieu.prix == 0 %}Gratuit{% else %}{{ "%g"|format(lieu.prix) }} DT{% endif %}</p>
           <p class="card-text">{{ lieu.description }}</p>
         </div>
       </div>
@@ -23,7 +57,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <p>Aucun lieu pour le moment.</p>
+  <p>Aucun lieu ne correspond à votre recherche.</p>
   {% endif %}
 </div>
 {% endblock %}

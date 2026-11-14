@@ -37,8 +37,7 @@ CREATE TABLE lieu (
     nom                        TEXT NOT NULL,
     description                TEXT,
     region                     TEXT NOT NULL,
-    budget                     TEXT NOT NULL DEFAULT 'gratuit'
-                               CHECK (budget IN ('gratuit', 'économique', 'moyen', 'cher')),
+    prix                       REAL NOT NULL DEFAULT 0 CHECK (prix >= 0),  -- prix moyen par personne en DT (0 = gratuit)
     latitude                   REAL NOT NULL,
     longitude                  REAL NOT NULL,
     infos_pratiques            TEXT,               -- horaires, accès, parking...
