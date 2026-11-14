@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -62,3 +62,18 @@ def connexion():
         return redirect(url_for("accueil"))
 
     return render_template("connexion.html")
+@app.before_request
+def charger_utilisateur():
+    utilisateur_id = session.get("utilisateur_id")
+    if utilisateur_id is None:
+        g.utilisateur = None
+    else:
+        g.utilisateur = db.get_db().execute(
+            "SELECT * FROM utilisateur WHERE id = ?", (utilisateur_id,)
+        ).fetchone()
+
+
+@app.route("/deconnexion")
+def deconnexion():
+    session.clear()
+    return redirect(url_for("accueil"))
