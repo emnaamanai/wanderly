@@ -18,7 +18,7 @@ GOUVERNORATS = [
     "Médenine", "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana",
     "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan",
 ]
-
+LIEUX_PAR_PAGE = 3
 
 def en_nombre(texte):
     try:
@@ -66,35 +66,49 @@ def accueil():
     region = request.args.get("region", "")
     prix_min = request.args.get("prix_min", "")
     prix_max = request.args.get("prix_max", "")
+    page = request.args.get("page", 1, type=int)
 
-    requete = (
-        "SELECT lieu.*, categorie.nom AS categorie "
+    depuis = (
         "FROM lieu JOIN categorie ON lieu.categorie_id = categorie.id "
         "WHERE 1 = 1"
     )
     parametres = []
 
     if categorie_id:
-        requete += " AND lieu.categorie_id = ?"
+        depuis += " AND lieu.categorie_id = ?"
         parametres.append(categorie_id)
     if region:
-        requete += " AND lieu.region = ?"
+        depuis += " AND lieu.region = ?"
         parametres.append(region)
 
     minimum = en_nombre(prix_min)
     if minimum is not None:
-        requete += " AND lieu.prix >= ?"
+        depuis += " AND lieu.prix >= ?"
         parametres.append(minimum)
     maximum = en_nombre(prix_max)
     if maximum is not None:
-        requete += " AND lieu.prix <= ?"
+        depuis += " AND lieu.prix <= ?"
         parametres.append(maximum)
 
-    requete += " ORDER BY lieu.id DESC"
-    lieux = base.execute(requete, parametres).fetchall()
+    total = base.execute("SELECT COUNT(*) " + depuis, parametres).fetchone()[0]
+    nb_pages = max(1, (total + LIEUX_PAR_PAGE - 1) // LIEUX_PAR_PAGE)
+    page = min(max(page, 1), nb_pages)
+
+    lieux = base.execute(
+        "SELECT lieu.*, categorie.nom AS categorie " + depuis +
+        " ORDER BY lieu.id DESC LIMIT ? OFFSET ?",
+        parametres + [LIEUX_PAR_PAGE, (page - 1) * LIEUX_PAR_PAGE],
+    ).fetchall()
 
     categories = base.execute("SELECT * FROM categorie ORDER BY nom").fetchall()
     prix_le_plus_haut = base.execute("SELECT MAX(prix) FROM lieu").fetchone()[0] or 0
+
+    filtres = {
+        "categorie": categorie_id,
+        "region": region,
+        "prix_min": prix_min,
+        "prix_max": prix_max,
+    }
 
     return render_template(
         "index.html",
@@ -106,8 +120,10 @@ def accueil():
         prix_min=prix_min,
         prix_max=prix_max,
         prix_le_plus_haut=prix_le_plus_haut,
+        page=page,
+        nb_pages=nb_pages,
+        filtres=filtres,
     )
-
 
 @app.route("/inscription", methods=["GET", "POST"])
 def inscription():

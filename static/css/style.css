@@ -61,3 +61,16 @@ body {
   border-radius: 1rem;
   padding: 1rem;
 }
+/* Pagination violette */
+.pagination-wander .page-link {
+  color: #6B4C9A;
+  border-color: #E3D9F2;
+}
+.pagination-wander .page-item.active .page-link {
+  background: #6B4C9A;
+  border-color: #6B4C9A;
+  color: #FFFFFF;
+}
+.pagination-wander .page-link:hover {
+  background: #EFE8F8;
+}
