@@ -1,18 +1,9 @@
-from flask import Flask, render_template
-from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.security import generate_password_hash
 import sqlite3
-app = Flask(__name__)
-import db
-db.init_app(app)
-
-@app.route("/")
-def accueil():
-    return render_template("index.html")
-from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.security import generate_password_hash
+from flask import Flask, render_template, request, redirect, url_for, session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "wanderly-cle-secrete-a-changer-123"
 
 import db
 db.init_app(app)
@@ -45,6 +36,29 @@ def inscription():
 
         return redirect(url_for("accueil"))
 
+    return render_template("inscription.html")
+
+
+@app.route("/connexion", methods=["GET", "POST"])
+def connexion():
+    if request.method == "POST":
+        pseudo = request.form["pseudo"]
+        mot_de_passe = request.form["mot_de_passe"]
+
+        base = db.get_db()
+        utilisateur = base.execute(
+            "SELECT * FROM utilisateur WHERE pseudo = ?", (pseudo,)
+        ).fetchone()
+
+        if utilisateur is None or not check_password_hash(
+            utilisateur["mot_de_passe_hash"], mot_de_passe
+        ):
+            return render_template(
+                "connexion.html", erreur="Pseudo ou mot de passe incorrect."
+            )
+
+        session.clear()
+        session["utilisateur_id"] = utilisateur["id"]
         return redirect(url_for("accueil"))
 
-    return render_template("inscription.html")
+    return render_template("connexion.html")
