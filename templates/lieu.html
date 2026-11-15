@@ -45,11 +45,14 @@
   {% endif %}
 
   <div id="carte-lieu" class="carte-detail"></div>
-    {% if g.utilisateur and (g.utilisateur.id == lieu.auteur_id or g.utilisateur.role == 'admin') %}
-  <form method="post" action="{{ url_for('supprimer_lieu', lieu_id=lieu.id) }}"
-        onsubmit="return confirm('Supprimer ce lieu définitivement ?');" class="mt-4">
-    <button type="submit" class="btn btn-outline-wander">Supprimer ce lieu</button>
-  </form>
+      {% if g.utilisateur and (g.utilisateur.id == lieu.auteur_id or g.utilisateur.role == 'admin') %}
+  <div class="d-flex gap-2 mt-4">
+    <a class="btn btn-wander" href="{{ url_for('modifier_lieu', lieu_id=lieu.id) }}">Modifier ce lieu</a>
+    <form method="post" action="{{ url_for('supprimer_lieu', lieu_id=lieu.id) }}"
+          onsubmit="return confirm('Supprimer ce lieu définitivement ?');">
+      <button type="submit" class="btn btn-outline-wander">Supprimer ce lieu</button>
+    </form>
+  </div>
   {% endif %}
 </div>
 {% endblock %}

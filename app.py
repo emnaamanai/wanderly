@@ -350,3 +350,67 @@ def supprimer_lieu(lieu_id):
     base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
     base.commit()
     return redirect(url_for("accueil"))
+@app.route("/lieux/<int:lieu_id>/modifier", methods=["GET", "POST"])
+@login_required
+def modifier_lieu(lieu_id):
+    base = db.get_db()
+    lieu = base.execute("SELECT * FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+
+    if lieu is None:
+        abort(404)
+    if lieu["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
+        abort(403)
+
+    categories = base.execute("SELECT * FROM categorie ORDER BY nom").fetchall()
+    tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
+    tags_du_lieu = {
+        str(ligne["tag_id"])
+        for ligne in base.execute(
+            "SELECT tag_id FROM lieu_tag WHERE lieu_id = ?", (lieu_id,)
+        ).fetchall()
+    }
+
+    if request.method == "POST":
+        nom = request.form["nom"].strip()
+        categorie_id = request.form["categorie"]
+        region = request.form["region"]
+        description = request.form["description"].strip()
+        infos_pratiques = request.form["infos_pratiques"].strip()
+        prix = en_nombre(request.form["prix"])
+
+        ids_valides = {str(t["id"]) for t in tags}
+        tags_choisis = [t for t in request.form.getlist("tags") if t in ids_valides]
+
+        if not nom or region not in GOUVERNORATS or prix is None or prix < 0:
+            return render_template(
+                "modifier_lieu.html",
+                erreur="Merci de remplir correctement tous les champs obligatoires.",
+                lieu=lieu,
+                categories=categories,
+                tags=tags,
+                tags_du_lieu=tags_du_lieu,
+                gouvernorats=GOUVERNORATS,
+            )
+
+        base.execute(
+            "UPDATE lieu SET nom = ?, description = ?, region = ?, prix = ?, "
+            "infos_pratiques = ?, categorie_id = ? WHERE id = ?",
+            (nom, description, region, prix, infos_pratiques, categorie_id, lieu_id),
+        )
+        base.execute("DELETE FROM lieu_tag WHERE lieu_id = ?", (lieu_id,))
+        for tag_id in tags_choisis:
+            base.execute(
+                "INSERT INTO lieu_tag (lieu_id, tag_id) VALUES (?, ?)",
+                (lieu_id, tag_id),
+            )
+        base.commit()
+        return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
+    return render_template(
+        "modifier_lieu.html",
+        lieu=lieu,
+        categories=categories,
+        tags=tags,
+        tags_du_lieu=tags_du_lieu,
+        gouvernorats=GOUVERNORATS,
+    )

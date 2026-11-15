@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block titre %}Modifier {{ lieu.nom }} - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 640px;">
+  <h1 class="h3 wander-text mb-4">Modifier le lieu</h1>
+
+  {% if erreur %}
+  <div class="alert-wander mb-3">{{ erreur }}</div>
+  {% endif %}
+
+  <form method="post">
+    <div class="mb-3">
+      <label for="nom" class="form-label">Nom du lieu *</label>
+      <input type="text" class="form-control" id="nom" name="nom" value="{{ lieu.nom }}" required>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label for="categorie" class="form-label">Catégorie *</label>
+        <select class="form-select" id="categorie" name="categorie" required>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {% if c.id == lieu.categorie_id %}selected{% endif %}>{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="region" class="form-label">Région *</label>
+        <select class="form-select" id="region" name="region" required>
+          {% for r in gouvernorats %}
+          <option value="{{ r }}" {% if r == lieu.region %}selected{% endif %}>{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Ambiance</label>
+      <div class="d-flex flex-wrap gap-2">
+        {% for t in tags %}
+        <input type="checkbox" class="btn-check" id="tag{{ t.id }}" name="tags" value="{{ t.id }}"
+               {% if t.id|string in tags_du_lieu %}checked{% endif %}>
+        <label class="btn btn-tag" for="tag{{ t.id }}">{{ t.nom }}</label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="prix" class="form-label">Prix moyen par personne (DT) *</label>
+      <input type="number" class="form-control" id="prix" name="prix" min="0" step="0.5"
+             value="{{ '%g'|format(lieu.prix) }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3">{{ lieu.description or '' }}</textarea>
+    </div>
+
+    <div class="mb-4">
+      <label for="infos_pratiques" class="form-label">Infos pratiques</label>
+      <textarea class="form-control" id="infos_pratiques" name="infos_pratiques" rows="2">{{ lieu.infos_pratiques or '' }}</textarea>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-wander flex-grow-1">Enregistrer</button>
+      <a href="{{ url_for('voir_lieu', lieu_id=lieu.id) }}" class="btn btn-outline-wander">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
