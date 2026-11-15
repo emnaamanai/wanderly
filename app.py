@@ -4,7 +4,7 @@ import uuid
 from datetime import date
 from functools import wraps
 from flask import (
-    Flask, render_template, request, redirect, url_for, session, g, abort
+    Flask, render_template, request, redirect, url_for, session, g, abort, flash
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -29,7 +29,7 @@ GOUVERNORATS = [
     "Médenine", "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana",
     "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan",
 ]
-
+MOTIFS = ["fermé", "doublon", "information fausse", "contenu inapproprié"]
 
 @app.errorhandler(413)
 def fichier_trop_lourd(erreur):
@@ -541,3 +541,39 @@ def mes_lieux():
     a_visiter = [l for l in lignes if l["statut"] == "à visiter"]
 
     return render_template("mes_lieux.html", visites=visites, a_visiter=a_visiter)
+@app.route("/lieux/<int:lieu_id>/confirmer", methods=["POST"])
+@login_required
+def confirmer_lieu(lieu_id):
+    base = db.get_db()
+    lieu = base.execute("SELECT id FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+    if lieu is None:
+        abort(404)
+
+    base.execute(
+        "UPDATE lieu SET nb_confirmations = nb_confirmations + 1, "
+        "date_derniere_confirmation = date('now') WHERE id = ?",
+        (lieu_id,),
+    )
+    base.commit()
+    return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
+@app.route("/lieux/<int:lieu_id>/signaler", methods=["POST"])
+@login_required
+def signaler_lieu(lieu_id):
+    base = db.get_db()
+    lieu = base.execute("SELECT id FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+    if lieu is None:
+        abort(404)
+
+    motif = request.form.get("motif")
+    if motif not in MOTIFS:
+        abort(400)
+
+    base.execute(
+        "INSERT INTO signalement (motif, auteur_id, lieu_id) VALUES (?, ?, ?)",
+        (motif, g.utilisateur["id"], lieu_id),
+    )
+    base.commit()
+    flash("Merci, ton signalement a été envoyé. Un administrateur va le vérifier.")
+    return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+    return redirect(url_for("voir_lieu", lieu_id=lieu_id))
