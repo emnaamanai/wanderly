@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block titre %}Pour toi - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5">
+  <h1 class="h2 wander-text mb-1">Pour toi</h1>
+
+  {% if tags_aimes %}
+  <p class="text-secondary mb-4">
+    Des lieux que tu n'as pas encore visités, choisis d'après tes coups de cœur :
+    {% for t in tags_aimes %}<span class="badge-wander me-1">{{ t.nom }}</span>{% endfor %}
+  </p>
+  {% else %}
+  <p class="text-secondary mb-4">
+    Donne 4 ou 5 étoiles à quelques lieux que tu as aimés : Wanderly te proposera ensuite
+    d'autres lieux avec la même ambiance.
+  </p>
+  {% endif %}
+
+  {% if lieux %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for lieu in lieux %}
+    <div class="col">
+      <div class="card carte-lieu h-100">
+        <div class="card-body">
+          <span class="badge-wander">{{ lieu.categorie }}</span>
+          <h2 class="h5 mt-2">
+            <a class="stretched-link text-decoration-none lien-lieu" href="{{ url_for('voir_lieu', lieu_id=lieu.id) }}">{{ lieu.nom }}</a>
+          </h2>
+          <p class="text-secondary small mb-2">
+            {{ lieu.region }} · {% if lieu.prix == 0 %}Gratuit{% else %}{{ "%g"|format(lieu.prix) }} DT{% endif %}
+          </p>
+          <p class="card-text">{{ lieu.description }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif tags_aimes %}
+  <p>Aucune nouvelle suggestion pour l'instant : tu as déjà exploré les lieux qui te ressemblent.</p>
+  {% endif %}
+</div>
+{% endblock %}

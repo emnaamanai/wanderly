@@ -846,4 +846,40 @@ def supprimer_sortie(sortie_id):
     base.commit()
     flash("Sortie supprimée.")
     return redirect(url_for("liste_sorties"))
+@app.route("/recommandations")
+@login_required
+def recommandations():
+    base = db.get_db()
+    moi = g.utilisateur["id"]
 
+    tags_aimes = base.execute(
+        "SELECT tag_ambiance.nom AS nom, COUNT(*) AS poids "
+        "FROM avis "
+        "JOIN lieu_tag ON lieu_tag.lieu_id = avis.lieu_id "
+        "JOIN tag_ambiance ON tag_ambiance.id = lieu_tag.tag_id "
+        "WHERE avis.auteur_id = ? AND avis.note >= 4 "
+        "GROUP BY tag_ambiance.id ORDER BY poids DESC, nom LIMIT 5",
+        (moi,),
+    ).fetchall()
+
+    lieux = base.execute(
+        "SELECT lieu.*, categorie.nom AS categorie, SUM(pref.poids) AS score "
+        "FROM lieu "
+        "JOIN categorie ON lieu.categorie_id = categorie.id "
+        "JOIN lieu_tag ON lieu_tag.lieu_id = lieu.id "
+        "JOIN ("
+        "    SELECT lieu_tag.tag_id AS tag_id, COUNT(*) AS poids "
+        "    FROM avis JOIN lieu_tag ON lieu_tag.lieu_id = avis.lieu_id "
+        "    WHERE avis.auteur_id = ? AND avis.note >= 4 "
+        "    GROUP BY lieu_tag.tag_id"
+        ") AS pref ON pref.tag_id = lieu_tag.tag_id "
+        "WHERE lieu.auteur_id != ? "
+        "AND lieu.id NOT IN (SELECT lieu_id FROM avis WHERE auteur_id = ?) "
+        "AND lieu.id NOT IN (SELECT lieu_id FROM liste_lieu "
+        "                    WHERE utilisateur_id = ? AND statut = 'visité') "
+        "GROUP BY lieu.id "
+        "ORDER BY score DESC, lieu.id DESC LIMIT 9",
+        (moi, moi, moi, moi),
+    ).fetchall()
+
+    return render_template("recommandations.html", lieux=lieux, tags_aimes=tags_aimes)
