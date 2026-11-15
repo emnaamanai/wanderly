@@ -351,7 +351,14 @@ def voir_lieu(lieu_id):
             (lieu_id, g.utilisateur["id"]),
         ).fetchone()
         peut_noter = deja is None
-
+    mon_statut = None
+    if g.utilisateur:
+        ligne = base.execute(
+            "SELECT statut FROM liste_lieu WHERE utilisateur_id = ? AND lieu_id = ?",
+            (g.utilisateur["id"], lieu_id),
+        ).fetchone()
+        if ligne:
+            mon_statut = ligne["statut"]
     return render_template(
         "lieu.html",
         lieu=lieu,
@@ -361,6 +368,7 @@ def voir_lieu(lieu_id):
         nb_avis=stats["nb"],
         moyenne=stats["moyenne"],
         peut_noter=peut_noter,
+        mon_statut=mon_statut,
         aujourdhui=date.today().isoformat(),
     )
 
@@ -488,4 +496,31 @@ def ajouter_avis(lieu_id):
     except sqlite3.IntegrityError:
         pass  # il a déjà donné un avis sur ce lieu
 
+    return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+@app.route("/lieux/<int:lieu_id>/liste", methods=["POST"])
+@login_required
+def changer_liste(lieu_id):
+    base = db.get_db()
+    lieu = base.execute("SELECT id FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+    if lieu is None:
+        abort(404)
+
+    statut = request.form.get("statut")
+
+    if statut == "retirer":
+        base.execute(
+            "DELETE FROM liste_lieu WHERE utilisateur_id = ? AND lieu_id = ?",
+            (g.utilisateur["id"], lieu_id),
+        )
+    elif statut in ("visité", "à visiter"):
+        base.execute(
+            "INSERT INTO liste_lieu (utilisateur_id, lieu_id, statut) VALUES (?, ?, ?) "
+            "ON CONFLICT (utilisateur_id, lieu_id) "
+            "DO UPDATE SET statut = excluded.statut, date_marquage = date('now')",
+            (g.utilisateur["id"], lieu_id, statut),
+        )
+    else:
+        abort(400)
+
+    base.commit()
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))

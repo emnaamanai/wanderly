@@ -24,6 +24,21 @@
     </div>
     {% endif %}
   </div>
+    {% if g.utilisateur %}
+  <form method="post" action="{{ url_for('changer_liste', lieu_id=lieu.id) }}" class="d-flex flex-wrap gap-2 mb-4">
+    <button type="submit" name="statut" value="visité"
+            class="btn {% if mon_statut == 'visité' %}btn-wander{% else %}btn-outline-wander{% endif %}">
+      ✓ Visité
+    </button>
+    <button type="submit" name="statut" value="à visiter"
+            class="btn {% if mon_statut == 'à visiter' %}btn-wander{% else %}btn-outline-wander{% endif %}">
+      ☆ À visiter
+    </button>
+    {% if mon_statut %}
+    <button type="submit" name="statut" value="retirer" class="btn btn-link">Retirer</button>
+    {% endif %}
+  </form>
+  {% endif %}
     {% if photos %}
   <div class="photos-lieu mb-4">
     {% for photo in photos %}
