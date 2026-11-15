@@ -138,7 +138,12 @@ def accueil():
 
     saison = request.args.get("saison", "")
 
-    # --- Onglet Sorties : filtres saison, prix et catégorie ---
+    # Les tags d'ambiance cochés (lus avant les deux onglets)
+    tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
+    ids_valides = {str(t["id"]) for t in tags}
+    tags_choisis = [t for t in request.args.getlist("tags") if t in ids_valides]
+
+    # --- Onglet Sorties : filtres catégorie, région, saison, prix, ambiance ---
     sorties = []
     if onglet == "sorties":
         conditions = "WHERE 1 = 1"
@@ -166,6 +171,26 @@ def accueil():
             )
             params_sorties.append(categorie_id)
 
+        if region in GOUVERNORATS:
+            conditions += (
+                " AND sortie.id IN (SELECT sortie_lieu.sortie_id FROM sortie_lieu "
+                "JOIN lieu ON sortie_lieu.lieu_id = lieu.id "
+                "WHERE lieu.region = ?)"
+            )
+            params_sorties.append(region)
+
+        if tags_choisis:
+            conditions += (
+                " AND sortie.id IN (SELECT sortie_lieu.sortie_id FROM sortie_lieu "
+                "JOIN lieu_tag ON lieu_tag.lieu_id = sortie_lieu.lieu_id "
+                "WHERE lieu_tag.tag_id IN ("
+                + ",".join("?" * len(tags_choisis))
+                + ") GROUP BY sortie_lieu.sortie_id "
+                "HAVING COUNT(DISTINCT lieu_tag.tag_id) = ?)"
+            )
+            params_sorties.extend(tags_choisis)
+            params_sorties.append(len(tags_choisis))
+
         sorties = base.execute(
             "SELECT sortie.*, utilisateur.pseudo AS auteur, "
             "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
@@ -178,10 +203,6 @@ def accueil():
         ).fetchall()
 
     # --- Onglet Lieux : filtres catégorie, région, prix, ambiance ---
-    tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
-    ids_valides = {str(t["id"]) for t in tags}
-    tags_choisis = [t for t in request.args.getlist("tags") if t in ids_valides]
-
     depuis = (
         "FROM lieu JOIN categorie ON lieu.categorie_id = categorie.id "
         "WHERE 1 = 1"
