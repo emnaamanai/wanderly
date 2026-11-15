@@ -90,8 +90,7 @@ CREATE TABLE sortie (
     titre         TEXT NOT NULL,
     description   TEXT,
     duree         TEXT,                            -- ex. « 2 heures », « une journée »
-    budget        TEXT NOT NULL DEFAULT 'gratuit'
-                  CHECK (budget IN ('gratuit', 'économique', 'moyen', 'cher')),
+    prix          REAL NOT NULL DEFAULT 0 CHECK (prix >= 0),  -- budget total par personne en DT (0 = gratuit)
     saison        TEXT CHECK (saison IN ('printemps', 'été', 'automne', 'hiver', 'toute l''année')),
     taille_groupe INTEGER,
     auteur_id     INTEGER NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE
