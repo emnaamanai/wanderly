@@ -80,3 +80,20 @@ body {
   border-radius: 1rem;
   border: 1px solid #E3D9F2;
 }
+/* Page d'un lieu */
+.carte-detail {
+  height: 350px;
+  border-radius: 1rem;
+  border: 1px solid #E3D9F2;
+}
+.infos-lieu {
+  background: #EFE8F8;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+.lien-lieu {
+  color: #2B2540;
+}
+.lien-lieu:hover {
+  color: #6B4C9A;
+}

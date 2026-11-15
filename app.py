@@ -218,15 +218,30 @@ def ajouter_lieu():
                 gouvernorats=GOUVERNORATS,
             )
 
-        base.execute(
+        curseur = base.execute(
             "INSERT INTO lieu (nom, description, region, prix, latitude, longitude, "
             "infos_pratiques, auteur_id, categorie_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (nom, description, region, prix, latitude, longitude,
              infos_pratiques, g.utilisateur["id"], categorie_id),
         )
         base.commit()
-        return redirect(url_for("accueil"))
+        return redirect(url_for("voir_lieu", lieu_id=curseur.lastrowid))
 
     return render_template(
         "ajouter_lieu.html", categories=categories, gouvernorats=GOUVERNORATS
     )
+@app.route("/lieux/<int:lieu_id>")
+def voir_lieu(lieu_id):
+    lieu = db.get_db().execute(
+        "SELECT lieu.*, categorie.nom AS categorie, utilisateur.pseudo AS auteur "
+        "FROM lieu "
+        "JOIN categorie ON lieu.categorie_id = categorie.id "
+        "JOIN utilisateur ON lieu.auteur_id = utilisateur.id "
+        "WHERE lieu.id = ?",
+        (lieu_id,),
+    ).fetchone()
+
+    if lieu is None:
+        abort(404)
+
+    return render_template("lieu.html", lieu=lieu)

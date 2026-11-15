@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ lieu.nom }} - Wanderly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 800px;">
+  <a href="{{ url_for('accueil') }}" class="text-decoration-none wander-text">&larr; Retour aux lieux</a>
+
+  <div class="mt-3">
+    <span class="badge-wander">{{ lieu.categorie }}</span>
+    <h1 class="h2 mt-2">{{ lieu.nom }}</h1>
+    <p class="text-secondary">
+      {{ lieu.region }} ·
+      {% if lieu.prix == 0 %}Gratuit{% else %}{{ "%g"|format(lieu.prix) }} DT par personne{% endif %}
+      · Ajouté par {{ lieu.auteur }}
+    </p>
+  </div>
+
+  {% if lieu.description %}
+  <p>{{ lieu.description }}</p>
+  {% endif %}
+
+  {% if lieu.infos_pratiques %}
+  <div class="infos-lieu mb-4">
+    <strong>Infos pratiques</strong>
+    <p class="mb-0">{{ lieu.infos_pratiques }}</p>
+  </div>
+  {% endif %}
+
+  <div id="carte-lieu" class="carte-detail"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  var position = [{{ lieu.latitude }}, {{ lieu.longitude }}];
+  var carte = L.map('carte-lieu').setView(position, 15);
+
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(carte);
+
+  L.marker(position).addTo(carte);
+</script>
+{% endblock %}
