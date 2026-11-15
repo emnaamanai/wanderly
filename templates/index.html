@@ -7,6 +7,15 @@
   <h1 class="h2 wander-text mb-1">Découvrez la Tunisie</h1>
   <p class="text-secondary mb-4">Des lieux à explorer, un endroit à la fois.</p>
 
+  <div class="onglets-wander mb-3">
+    <a href="{{ url_for('accueil') }}"
+       class="onglet-wander {% if onglet == 'lieux' %}actif{% endif %}">Lieux</a>
+    <a href="{{ url_for('accueil', onglet='sorties') }}"
+       class="onglet-wander {% if onglet == 'sorties' %}actif{% endif %}">Sorties</a>
+  </div>
+
+  {% if onglet == 'lieux' %}
+
   <form method="get" class="filtres-wander mb-2">
     <div class="row g-2">
       <div class="col-12 col-md-3">
@@ -38,7 +47,7 @@
         <a href="{{ url_for('accueil') }}" class="btn btn-link">Effacer</a>
       </div>
     </div>
-        <details class="mt-3" {% if tags_choisis %}open{% endif %}>
+    <details class="mt-3" {% if tags_choisis %}open{% endif %}>
       <summary class="wander-text fw-semibold">Ambiance</summary>
       <div class="d-flex flex-wrap gap-2 mt-2">
         {% for t in tags %}
@@ -69,7 +78,8 @@
   {% else %}
   <p>Aucun lieu ne correspond à votre recherche.</p>
   {% endif %}
-    {% if nb_pages > 1 %}
+
+  {% if nb_pages > 1 %}
   <nav class="mt-4" aria-label="Pagination">
     <ul class="pagination justify-content-center pagination-wander">
       <li class="page-item {% if page == 1 %}disabled{% endif %}">
@@ -85,6 +95,10 @@
       </li>
     </ul>
   </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="text-secondary">Les sorties arrivent ici à l'étape suivante.</p>
   {% endif %}
 </div>
 {% endblock %}

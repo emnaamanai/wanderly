@@ -171,3 +171,26 @@ body {
   font-weight: 600;
   flex-shrink: 0;
 }
+/* Onglets de l'accueil (Lieux / Sorties) */
+.onglets-wander {
+  display: inline-flex;
+  gap: 6px;
+  background: #F0EDF5;
+  border-radius: 50rem;
+  padding: 4px;
+}
+.onglet-wander {
+  color: #6B4C9A;
+  border-radius: 50rem;
+  padding: 0.4rem 1.4rem;
+  text-decoration: none;
+}
+.onglet-wander:hover {
+  background: #EFE8F8;
+  color: #6B4C9A;
+}
+.onglet-wander.actif {
+  background: #6B4C9A;
+  color: #FFFFFF;
+  font-weight: 600;
+}

@@ -124,6 +124,9 @@ def accueil():
     prix_min = request.args.get("prix_min", "")
     prix_max = request.args.get("prix_max", "")
     page = request.args.get("page", 1, type=int)
+    onglet = request.args.get("onglet", "lieux")
+    if onglet not in ("lieux", "sorties"):
+        onglet = "lieux"
 
     tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
     ids_valides = {str(t["id"]) for t in tags}
@@ -197,6 +200,7 @@ def accueil():
         page=page,
         nb_pages=nb_pages,
         filtres=filtres,
+        onglet=onglet,
     )
 
 # ---------- Comptes ----------
