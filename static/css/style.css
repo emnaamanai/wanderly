@@ -141,3 +141,14 @@ body {
   background: #EFE8F8;
   color: #6B4C9A;
 }
+/* Avis */
+.etoiles {
+  color: #6B4C9A;
+  letter-spacing: 2px;
+}
+.avis-carte {
+  background: #FFFFFF;
+  border: 1px solid #E3D9F2;
+  border-radius: 1rem;
+  padding: 1rem;
+}

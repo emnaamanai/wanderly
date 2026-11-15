@@ -54,6 +54,62 @@
     </form>
   </div>
   {% endif %}
+    <hr class="my-5">
+
+  <h2 class="h4 wander-text">Avis</h2>
+  {% if nb_avis > 0 %}
+  <p class="mb-3">
+    <span class="etoiles">{{ "★" * (moyenne|round|int) }}{{ "☆" * (5 - (moyenne|round|int)) }}</span>
+    <strong>{{ "%.1f"|format(moyenne) }}</strong> / 5 · {{ nb_avis }} avis
+  </p>
+    {% else %}
+  <p class="text-secondary">Pas encore d'avis.{% if peut_noter or not g.utilisateur %} Sois le premier !{% endif %}</p>
+  {% endif %}
+
+  {% if peut_noter %}
+  <form method="post" action="{{ url_for('ajouter_avis', lieu_id=lieu.id) }}" class="avis-carte mb-4">
+    <h3 class="h6 mb-3">Donner mon avis</h3>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label for="note" class="form-label">Note *</label>
+        <select class="form-select" id="note" name="note" required>
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Très bien</option>
+          <option value="3">3 - Bien</option>
+          <option value="2">2 - Moyen</option>
+          <option value="1">1 - À éviter</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="date_visite" class="form-label">Date de ma visite *</label>
+        <input type="date" class="form-control" id="date_visite" name="date_visite"
+               max="{{ aujourdhui }}" value="{{ aujourdhui }}" required>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label for="commentaire" class="form-label">Commentaire</label>
+      <textarea class="form-control" id="commentaire" name="commentaire" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-wander">Publier mon avis</button>
+  </form>
+  {% elif g.utilisateur and g.utilisateur.id == lieu.auteur_id %}
+  <p class="text-secondary small">Tu ne peux pas noter un lieu que tu as ajouté toi-même.</p>
+  {% elif g.utilisateur %}
+  <p class="text-secondary small">Tu as déjà donné ton avis sur ce lieu.</p>
+  {% else %}
+  <p class="text-secondary small"><a href="{{ url_for('connexion') }}" class="wander-text">Connecte-toi</a> pour donner ton avis.</p>
+  {% endif %}
+
+  {% for a in avis %}
+  <div class="avis-carte mb-3">
+    <div class="d-flex justify-content-between">
+      <strong>{{ a.auteur }}</strong>
+      <span class="etoiles">{{ "★" * a.note }}{{ "☆" * (5 - a.note) }}</span>
+    </div>
+    <div class="text-secondary small mb-2">Visité le {{ a.date_visite }}</div>
+    {% if a.commentaire %}<p class="mb-0">{{ a.commentaire }}</p>{% endif %}
+  </div>
+  {% endfor %}
 </div>
 {% endblock %}
 

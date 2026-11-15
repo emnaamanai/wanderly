@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import uuid
+from datetime import date
 from functools import wraps
 from flask import (
     Flask, render_template, request, redirect, url_for, session, g, abort
@@ -92,7 +93,7 @@ def charger_utilisateur():
         ).fetchone()
 
 
-# ---------- Pages ----------
+# ---------- Accueil ----------
 @app.route("/")
 def accueil():
     base = db.get_db()
@@ -175,6 +176,9 @@ def accueil():
         nb_pages=nb_pages,
         filtres=filtres,
     )
+
+
+# ---------- Comptes ----------
 @app.route("/inscription", methods=["GET", "POST"])
 def inscription():
     if request.method == "POST":
@@ -245,6 +249,7 @@ def admin():
     return render_template("admin.html")
 
 
+# ---------- Lieux ----------
 @app.route("/lieux/ajouter", methods=["GET", "POST"])
 @login_required
 def ajouter_lieu():
@@ -327,29 +332,39 @@ def voir_lieu(lieu_id):
         (lieu_id,),
     ).fetchall()
 
-    return render_template("lieu.html", lieu=lieu, photos=photos, tags=tags)
-@app.route("/lieux/<int:lieu_id>/supprimer", methods=["POST"])
-@login_required
-def supprimer_lieu(lieu_id):
-    base = db.get_db()
-    lieu = base.execute("SELECT * FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
-
-    if lieu is None:
-        abort(404)
-    if lieu["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
-        abort(403)
-
-    photos = base.execute(
-        "SELECT nom_fichier FROM photo WHERE lieu_id = ?", (lieu_id,)
+    avis = base.execute(
+        "SELECT avis.*, utilisateur.pseudo AS auteur FROM avis "
+        "JOIN utilisateur ON avis.auteur_id = utilisateur.id "
+        "WHERE avis.lieu_id = ? ORDER BY avis.id DESC",
+        (lieu_id,),
     ).fetchall()
-    for photo in photos:
-        chemin = os.path.join(DOSSIER_PHOTOS, photo["nom_fichier"])
-        if os.path.exists(chemin):
-            os.remove(chemin)
 
-    base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
-    base.commit()
-    return redirect(url_for("accueil"))
+    stats = base.execute(
+        "SELECT COUNT(*) AS nb, AVG(note) AS moyenne FROM avis WHERE lieu_id = ?",
+        (lieu_id,),
+    ).fetchone()
+
+    peut_noter = False
+    if g.utilisateur and g.utilisateur["id"] != lieu["auteur_id"]:
+        deja = base.execute(
+            "SELECT 1 FROM avis WHERE lieu_id = ? AND auteur_id = ?",
+            (lieu_id, g.utilisateur["id"]),
+        ).fetchone()
+        peut_noter = deja is None
+
+    return render_template(
+        "lieu.html",
+        lieu=lieu,
+        photos=photos,
+        tags=tags,
+        avis=avis,
+        nb_avis=stats["nb"],
+        moyenne=stats["moyenne"],
+        peut_noter=peut_noter,
+        aujourdhui=date.today().isoformat(),
+    )
+
+
 @app.route("/lieux/<int:lieu_id>/modifier", methods=["GET", "POST"])
 @login_required
 def modifier_lieu(lieu_id):
@@ -414,3 +429,63 @@ def modifier_lieu(lieu_id):
         tags_du_lieu=tags_du_lieu,
         gouvernorats=GOUVERNORATS,
     )
+
+
+@app.route("/lieux/<int:lieu_id>/supprimer", methods=["POST"])
+@login_required
+def supprimer_lieu(lieu_id):
+    base = db.get_db()
+    lieu = base.execute("SELECT * FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+
+    if lieu is None:
+        abort(404)
+    if lieu["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
+        abort(403)
+
+    photos = base.execute(
+        "SELECT nom_fichier FROM photo WHERE lieu_id = ?", (lieu_id,)
+    ).fetchall()
+    for photo in photos:
+        chemin = os.path.join(DOSSIER_PHOTOS, photo["nom_fichier"])
+        if os.path.exists(chemin):
+            os.remove(chemin)
+
+    base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
+    base.commit()
+    return redirect(url_for("accueil"))
+
+
+# ---------- Avis ----------
+@app.route("/lieux/<int:lieu_id>/avis", methods=["POST"])
+@login_required
+def ajouter_avis(lieu_id):
+    base = db.get_db()
+    lieu = base.execute("SELECT * FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+
+    if lieu is None:
+        abort(404)
+    if lieu["auteur_id"] == g.utilisateur["id"]:
+        abort(403)
+
+    note = request.form.get("note", type=int)
+    commentaire = request.form["commentaire"].strip()
+
+    try:
+        date_visite = date.fromisoformat(request.form["date_visite"])
+    except ValueError:
+        abort(400)
+
+    if note is None or not 1 <= note <= 5 or date_visite > date.today():
+        abort(400)
+
+    try:
+        base.execute(
+            "INSERT INTO avis (note, commentaire, date_visite, auteur_id, lieu_id) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (note, commentaire, date_visite.isoformat(), g.utilisateur["id"], lieu_id),
+        )
+        base.commit()
+    except sqlite3.IntegrityError:
+        pass  # il a déjà donné un avis sur ce lieu
+
+    return redirect(url_for("voir_lieu", lieu_id=lieu_id))
