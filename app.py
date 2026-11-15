@@ -779,16 +779,7 @@ def sortie_modifiable(base, sortie_id):
 
 @app.route("/sorties")
 def liste_sorties():
-    sorties = db.get_db().execute(
-        "SELECT sortie.*, utilisateur.pseudo AS auteur, "
-        "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
-        "FROM sortie "
-        "JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
-        "LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
-        "GROUP BY sortie.id "
-        "ORDER BY sortie.id DESC"
-    ).fetchall()
-    return render_template("sorties.html", sorties=sorties)
+    return redirect(url_for("accueil", onglet="sorties"))
 
 
 @app.route("/sorties/creer", methods=["GET", "POST"])
