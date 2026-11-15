@@ -236,6 +236,7 @@ def admin():
 def ajouter_lieu():
     base = db.get_db()
     categories = base.execute("SELECT * FROM categorie ORDER BY nom").fetchall()
+    tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
 
     if request.method == "POST":
         nom = request.form["nom"].strip()
@@ -247,12 +248,16 @@ def ajouter_lieu():
         latitude = en_nombre(request.form["latitude"])
         longitude = en_nombre(request.form["longitude"])
 
+        ids_valides = {str(t["id"]) for t in tags}
+        tags_choisis = [t for t in request.form.getlist("tags") if t in ids_valides]
+
         if (not nom or region not in GOUVERNORATS or prix is None or prix < 0
                 or latitude is None or longitude is None):
             return render_template(
                 "ajouter_lieu.html",
                 erreur="Merci de remplir correctement tous les champs obligatoires.",
                 categories=categories,
+                tags=tags,
                 gouvernorats=GOUVERNORATS,
             )
 
@@ -262,13 +267,23 @@ def ajouter_lieu():
             (nom, description, region, prix, latitude, longitude,
              infos_pratiques, g.utilisateur["id"], categorie_id),
         )
+        lieu_id = curseur.lastrowid
+
+        for tag_id in tags_choisis:
+            base.execute(
+                "INSERT INTO lieu_tag (lieu_id, tag_id) VALUES (?, ?)",
+                (lieu_id, tag_id),
+            )
         base.commit()
 
-        enregistrer_photos(request.files.getlist("photos"), curseur.lastrowid, base)
-        return redirect(url_for("voir_lieu", lieu_id=curseur.lastrowid))
+        enregistrer_photos(request.files.getlist("photos"), lieu_id, base)
+        return redirect(url_for("voir_lieu", lieu_id=lieu_id))
 
     return render_template(
-        "ajouter_lieu.html", categories=categories, gouvernorats=GOUVERNORATS
+        "ajouter_lieu.html",
+        categories=categories,
+        tags=tags,
+        gouvernorats=GOUVERNORATS,
     )
 
 
@@ -291,4 +306,11 @@ def voir_lieu(lieu_id):
         "SELECT * FROM photo WHERE lieu_id = ? ORDER BY id", (lieu_id,)
     ).fetchall()
 
-    return render_template("lieu.html", lieu=lieu, photos=photos)
+    tags = base.execute(
+        "SELECT tag_ambiance.nom FROM lieu_tag "
+        "JOIN tag_ambiance ON lieu_tag.tag_id = tag_ambiance.id "
+        "WHERE lieu_tag.lieu_id = ? ORDER BY tag_ambiance.nom",
+        (lieu_id,),
+    ).fetchall()
+
+    return render_template("lieu.html", lieu=lieu, photos=photos, tags=tags)

@@ -18,6 +18,11 @@
       {% if lieu.prix == 0 %}Gratuit{% else %}{{ "%g"|format(lieu.prix) }} DT par personne{% endif %}
       · Ajouté par {{ lieu.auteur }}
     </p>
+        {% if tags %}
+    <div class="mb-2">
+      {% for t in tags %}<span class="badge-wander me-1">{{ t.nom }}</span>{% endfor %}
+    </div>
+    {% endif %}
   </div>
     {% if photos %}
   <div class="photos-lieu mb-4">

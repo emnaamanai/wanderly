@@ -126,4 +126,10 @@ INSERT INTO categorie (nom) VALUES
     ('Café'), ('Plage'), ('Parc'), ('Randonnée'), ('Espace de jeux'), ('Pique-nique');
 
 INSERT INTO tag_ambiance (nom) VALUES
-    ('calme'), ('photogénique'), ('en groupe'), ('en famille'), ('vue magnifique'), ('animé');
+    ('calme'), ('photogénique'), ('en groupe'), ('en famille'), ('vue magnifique'), ('animé'),
+    ('romantique'), ('entre amis'), ('en solo'), ('pour les enfants'),
+    ('pas cher'), ('chic'), ('authentique'), ('moderne'), ('insolite'),
+    ('nature'), ('loin de la foule'), ('coucher de soleil'),
+    ('idéal pour travailler'), ('bon wifi'), ('musique live'),
+    ('sportif'), ('aventure'), ('culturel'), ('convivial'),
+    ('accepte les animaux'), ('accessible PMR'), ('calme et reposant');

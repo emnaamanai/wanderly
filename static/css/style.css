@@ -109,3 +109,20 @@ body {
   object-fit: cover;
   border-radius: 0.75rem;
 }
+/* Boutons de tags d'ambiance */
+.btn-tag {
+  border: 1px solid #6B4C9A;
+  color: #6B4C9A;
+  background: #FFFFFF;
+  border-radius: 50rem;
+  padding: 0.25rem 0.9rem;
+}
+.btn-tag:hover {
+  background: #EFE8F8;
+  color: #6B4C9A;
+}
+.btn-check:checked + .btn-tag {
+  background: #6B4C9A;
+  border-color: #6B4C9A;
+  color: #FFFFFF;
+}
