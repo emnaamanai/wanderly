@@ -124,9 +124,22 @@ def accueil():
     prix_min = request.args.get("prix_min", "")
     prix_max = request.args.get("prix_max", "")
     page = request.args.get("page", 1, type=int)
+
     onglet = request.args.get("onglet", "lieux")
     if onglet not in ("lieux", "sorties"):
         onglet = "lieux"
+
+    sorties = []
+    if onglet == "sorties":
+        sorties = base.execute(
+            "SELECT sortie.*, utilisateur.pseudo AS auteur, "
+            "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
+            "FROM sortie "
+            "JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
+            "LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
+            "GROUP BY sortie.id "
+            "ORDER BY sortie.id DESC"
+        ).fetchall()
 
     tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
     ids_valides = {str(t["id"]) for t in tags}
@@ -201,8 +214,8 @@ def accueil():
         nb_pages=nb_pages,
         filtres=filtres,
         onglet=onglet,
+        sorties=sorties,
     )
-
 # ---------- Comptes ----------
 @app.route("/inscription", methods=["GET", "POST"])
 def inscription():

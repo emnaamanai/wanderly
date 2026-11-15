@@ -97,8 +97,42 @@
   </nav>
   {% endif %}
 
+    {% else %}
+
+  {% if g.utilisateur %}
+  <div class="mb-3">
+    <a href="{{ url_for('creer_sortie') }}" class="btn btn-wander">Créer une sortie</a>
+  </div>
+  {% endif %}
+
+  {% if sorties %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for s in sorties %}
+    <div class="col">
+      <div class="card carte-lieu h-100">
+        <div class="card-body">
+          <h2 class="h5">
+            <a class="stretched-link text-decoration-none lien-lieu" href="{{ url_for('voir_sortie', sortie_id=s.id) }}">{{ s.titre }}</a>
+          </h2>
+          <p class="text-secondary small mb-2">Par {{ s.auteur }}</p>
+          <div class="mb-2">
+            <span class="badge-wander me-1">{{ s.nb_lieux }} lieu{{ 'x' if s.nb_lieux > 1 }}</span>
+            <span class="badge-wander me-1">
+              {% if s.prix == 0 %}Gratuit{% else %}{{ "%g"|format(s.prix) }} DT{% endif %}
+            </span>
+            {% if s.duree %}<span class="badge-wander me-1">{{ s.duree }}</span>{% endif %}
+            {% if s.saison %}<span class="badge-wander me-1">{{ s.saison }}</span>{% endif %}
+          </div>
+          {% if s.description %}<p class="card-text">{{ s.description }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   {% else %}
-  <p class="text-secondary">Les sorties arrivent ici à l'étape suivante.</p>
+  <p>Aucune sortie pour l'instant.{% if g.utilisateur %} Crée la première !{% endif %}</p>
+  {% endif %}
+
   {% endif %}
 </div>
 {% endblock %}
