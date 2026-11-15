@@ -524,3 +524,20 @@ def changer_liste(lieu_id):
 
     base.commit()
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+@app.route("/mes-lieux")
+@login_required
+def mes_lieux():
+    lignes = db.get_db().execute(
+        "SELECT lieu.*, categorie.nom AS categorie, liste_lieu.statut AS statut "
+        "FROM liste_lieu "
+        "JOIN lieu ON liste_lieu.lieu_id = lieu.id "
+        "JOIN categorie ON lieu.categorie_id = categorie.id "
+        "WHERE liste_lieu.utilisateur_id = ? "
+        "ORDER BY liste_lieu.date_marquage DESC, lieu.id DESC",
+        (g.utilisateur["id"],),
+    ).fetchall()
+
+    visites = [l for l in lignes if l["statut"] == "visité"]
+    a_visiter = [l for l in lignes if l["statut"] == "à visiter"]
+
+    return render_template("mes_lieux.html", visites=visites, a_visiter=a_visiter)
