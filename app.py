@@ -696,11 +696,14 @@ def creer_sortie():
         titre = request.form["titre"].strip()
         description = request.form["description"].strip()
         duree = request.form["duree"].strip()
-        prix = en_nombre(request.form["prix"])
+        prix_min = en_nombre(request.form["prix_min"])
+        prix_max = en_nombre(request.form["prix_max"])
         saison = request.form["saison"]
         taille_groupe = request.form.get("taille_groupe", type=int)
 
-        if (not titre or prix is None or prix < 0
+        if (not titre
+                or prix_min is None or prix_max is None
+                or prix_min < 0 or prix_min > prix_max
                 or (saison and saison not in SAISONS)
                 or (taille_groupe is not None and taille_groupe < 1)):
             return render_template(
@@ -711,9 +714,9 @@ def creer_sortie():
 
         base = db.get_db()
         curseur = base.execute(
-            "INSERT INTO sortie (titre, description, duree, prix, saison, "
-            "taille_groupe, auteur_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (titre, description, duree, prix, saison or None,
+            "INSERT INTO sortie (titre, description, duree, prix_min, prix_max, saison, "
+            "taille_groupe, auteur_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (titre, description, duree, prix_min, prix_max, saison or None,
              taille_groupe, g.utilisateur["id"]),
         )
         base.commit()
@@ -840,11 +843,14 @@ def modifier_sortie(sortie_id):
         titre = request.form["titre"].strip()
         description = request.form["description"].strip()
         duree = request.form["duree"].strip()
-        prix = en_nombre(request.form["prix"])
+        prix_min = en_nombre(request.form["prix_min"])
+        prix_max = en_nombre(request.form["prix_max"])
         saison = request.form["saison"]
         taille_groupe = request.form.get("taille_groupe", type=int)
 
-        if (not titre or prix is None or prix < 0
+        if (not titre
+                or prix_min is None or prix_max is None
+                or prix_min < 0 or prix_min > prix_max
                 or (saison and saison not in SAISONS)
                 or (taille_groupe is not None and taille_groupe < 1)):
             return render_template(
@@ -855,9 +861,9 @@ def modifier_sortie(sortie_id):
             )
 
         base.execute(
-            "UPDATE sortie SET titre = ?, description = ?, duree = ?, prix = ?, "
-            "saison = ?, taille_groupe = ? WHERE id = ?",
-            (titre, description, duree, prix, saison or None,
+            "UPDATE sortie SET titre = ?, description = ?, duree = ?, "
+            "prix_min = ?, prix_max = ?, saison = ?, taille_groupe = ? WHERE id = ?",
+            (titre, description, duree, prix_min, prix_max, saison or None,
              taille_groupe, sortie_id),
         )
         base.commit()
@@ -865,7 +871,6 @@ def modifier_sortie(sortie_id):
         return redirect(url_for("voir_sortie", sortie_id=sortie_id))
 
     return render_template("modifier_sortie.html", sortie=sortie, saisons=SAISONS)
-
 
 @app.route("/sorties/<int:sortie_id>/supprimer", methods=["POST"])
 @login_required

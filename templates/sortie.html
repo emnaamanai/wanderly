@@ -12,7 +12,7 @@
     <div class="mb-3">
       {% if sortie.duree %}<span class="badge-wander me-1">{{ sortie.duree }}</span>{% endif %}
       <span class="badge-wander me-1">
-        {% if sortie.prix == 0 %}Gratuit{% else %}{{ "%g"|format(sortie.prix) }} DT par personne{% endif %}
+        {% if sortie.prix_max == 0 %}Gratuit{% else %}{{ sortie|fourchette }} par personne{% endif %}
       </span>
       {% if sortie.saison %}<span class="badge-wander me-1">{{ sortie.saison }}</span>{% endif %}
       {% if sortie.taille_groupe %}<span class="badge-wander me-1">{{ sortie.taille_groupe }} personnes</span>{% endif %}

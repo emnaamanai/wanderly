@@ -117,9 +117,7 @@
           <p class="text-secondary small mb-2">Par {{ s.auteur }}</p>
           <div class="mb-2">
             <span class="badge-wander me-1">{{ s.nb_lieux }} lieu{{ 'x' if s.nb_lieux > 1 }}</span>
-            <span class="badge-wander me-1">
-              {% if s.prix == 0 %}Gratuit{% else %}{{ "%g"|format(s.prix) }} DT{% endif %}
-            </span>
+            <span class="badge-wander me-1">{{ s|fourchette }}</span>
             {% if s.duree %}<span class="badge-wander me-1">{{ s.duree }}</span>{% endif %}
             {% if s.saison %}<span class="badge-wander me-1">{{ s.saison }}</span>{% endif %}
           </div>

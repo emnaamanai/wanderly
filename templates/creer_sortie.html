@@ -22,17 +22,25 @@
       <textarea class="form-control" id="description" name="description" rows="3"></textarea>
     </div>
 
-    <div class="row g-3 mb-3">
-      <div class="col-md-6">
-        <label for="duree" class="form-label">Durée</label>
-        <input type="text" class="form-control" id="duree" name="duree"
-               placeholder="Ex : 2 heures, une journée">
+    <div class="mb-3">
+      <label for="duree" class="form-label">Durée</label>
+      <input type="text" class="form-control" id="duree" name="duree"
+             placeholder="Ex : 2 heures, une journée">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Fourchette de budget par personne (DT) *</label>
+      <div class="row g-2">
+        <div class="col-6">
+          <input type="number" class="form-control" id="prix_min" name="prix_min"
+                 min="0" step="0.5" value="0" placeholder="Minimum" required>
+        </div>
+        <div class="col-6">
+          <input type="number" class="form-control" id="prix_max" name="prix_max"
+                 min="0" step="0.5" value="0" placeholder="Maximum" required>
+        </div>
       </div>
-      <div class="col-md-6">
-        <label for="prix" class="form-label">Budget par personne (DT) *</label>
-        <input type="number" class="form-control" id="prix" name="prix"
-               min="0" step="0.5" value="0" required>
-      </div>
+      <div class="form-text">Exemple : 10 et 20. Mets 0 et 0 si la sortie est gratuite, ou le même nombre deux fois si le budget est fixe.</div>
     </div>
 
     <div class="row g-3 mb-4">
