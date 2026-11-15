@@ -12,7 +12,7 @@
   <div class="alert-wander mb-3">{{ erreur }}</div>
   {% endif %}
 
-  <form method="post">
+    <form method="post" enctype="multipart/form-data">
     <div class="mb-3">
       <label for="nom" class="form-label">Nom du lieu *</label>
       <input type="text" class="form-control" id="nom" name="nom" required>
@@ -51,6 +51,12 @@
     <div class="mb-3">
       <label for="infos_pratiques" class="form-label">Infos pratiques (horaires, accès, parking...)</label>
       <textarea class="form-control" id="infos_pratiques" name="infos_pratiques" rows="2"></textarea>
+    </div>
+        <div class="mb-3">
+      <label for="photos" class="form-label">Photos (5 maximum)</label>
+      <input type="file" class="form-control" id="photos" name="photos"
+             accept=".jpg,.jpeg,.png,.webp" multiple>
+      <div class="form-text">Formats acceptés : JPG, PNG, WEBP. 10 Mo au total.</div>
     </div>
 
     <div class="mb-4">

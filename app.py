@@ -1,4 +1,6 @@
+import os
 import sqlite3
+import uuid
 from functools import wraps
 from flask import (
     Flask, render_template, request, redirect, url_for, session, g, abort
@@ -12,19 +14,51 @@ import db
 db.init_app(app)
 
 
+# ---------- Réglages ----------
+DOSSIER_PHOTOS = os.path.join(app.root_path, "static", "uploads")
+os.makedirs(DOSSIER_PHOTOS, exist_ok=True)
+EXTENSIONS_AUTORISEES = {"jpg", "jpeg", "png", "webp"}
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 Mo maximum par envoi
+
+LIEUX_PAR_PAGE = 12
+
 GOUVERNORATS = [
     "Ariana", "Béja", "Ben Arous", "Bizerte", "Gabès", "Gafsa", "Jendouba",
     "Kairouan", "Kasserine", "Kébili", "Le Kef", "Mahdia", "La Manouba",
     "Médenine", "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana",
     "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan",
 ]
-LIEUX_PAR_PAGE = 3
 
+
+@app.errorhandler(413)
+def fichier_trop_lourd(erreur):
+    return "Les fichiers envoyés sont trop lourds (10 Mo maximum).", 413
+
+
+# ---------- Fonctions utiles ----------
 def en_nombre(texte):
     try:
         return float(texte)
     except ValueError:
         return None
+
+
+def enregistrer_photos(fichiers, lieu_id, base):
+    for fichier in fichiers[:5]:
+        if not fichier or fichier.filename == "":
+            continue
+        if "." not in fichier.filename:
+            continue
+        extension = fichier.filename.rsplit(".", 1)[1].lower()
+        if extension not in EXTENSIONS_AUTORISEES:
+            continue
+        nom_fichier = uuid.uuid4().hex + "." + extension
+        fichier.save(os.path.join(DOSSIER_PHOTOS, nom_fichier))
+        base.execute(
+            "INSERT INTO photo (nom_fichier, lieu_id) VALUES (?, ?)",
+            (nom_fichier, lieu_id),
+        )
+    base.commit()
 
 
 def login_required(vue):
@@ -58,6 +92,7 @@ def charger_utilisateur():
         ).fetchone()
 
 
+# ---------- Pages ----------
 @app.route("/")
 def accueil():
     base = db.get_db()
@@ -124,6 +159,7 @@ def accueil():
         nb_pages=nb_pages,
         filtres=filtres,
     )
+
 
 @app.route("/inscription", methods=["GET", "POST"])
 def inscription():
@@ -193,6 +229,8 @@ def profil():
 @admin_required
 def admin():
     return render_template("admin.html")
+
+
 @app.route("/lieux/ajouter", methods=["GET", "POST"])
 @login_required
 def ajouter_lieu():
@@ -225,14 +263,19 @@ def ajouter_lieu():
              infos_pratiques, g.utilisateur["id"], categorie_id),
         )
         base.commit()
+
+        enregistrer_photos(request.files.getlist("photos"), curseur.lastrowid, base)
         return redirect(url_for("voir_lieu", lieu_id=curseur.lastrowid))
 
     return render_template(
         "ajouter_lieu.html", categories=categories, gouvernorats=GOUVERNORATS
     )
+
+
 @app.route("/lieux/<int:lieu_id>")
 def voir_lieu(lieu_id):
-    lieu = db.get_db().execute(
+    base = db.get_db()
+    lieu = base.execute(
         "SELECT lieu.*, categorie.nom AS categorie, utilisateur.pseudo AS auteur "
         "FROM lieu "
         "JOIN categorie ON lieu.categorie_id = categorie.id "
@@ -244,4 +287,8 @@ def voir_lieu(lieu_id):
     if lieu is None:
         abort(404)
 
-    return render_template("lieu.html", lieu=lieu)
+    photos = base.execute(
+        "SELECT * FROM photo WHERE lieu_id = ? ORDER BY id", (lieu_id,)
+    ).fetchall()
+
+    return render_template("lieu.html", lieu=lieu, photos=photos)

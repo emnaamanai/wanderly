@@ -19,6 +19,14 @@
       · Ajouté par {{ lieu.auteur }}
     </p>
   </div>
+    {% if photos %}
+  <div class="photos-lieu mb-4">
+    {% for photo in photos %}
+    <img src="{{ url_for('static', filename='uploads/' + photo.nom_fichier) }}"
+         alt="Photo de {{ lieu.nom }}">
+    {% endfor %}
+  </div>
+  {% endif %}
 
   {% if lieu.description %}
   <p>{{ lieu.description }}</p>
