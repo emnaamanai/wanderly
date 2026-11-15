@@ -32,6 +32,7 @@ MOTIFS = ["fermé", "doublon", "information fausse", "contenu inapproprié"]
 MOTIFS_AVIS = ["information fausse", "contenu inapproprié"]
 SAISONS = ["printemps", "été", "automne", "hiver", "toute l'année"]
 
+
 @app.errorhandler(413)
 def fichier_trop_lourd(erreur):
     return "Les fichiers envoyés sont trop lourds (10 Mo maximum).", 413
@@ -61,6 +62,8 @@ def enregistrer_photos(fichiers, lieu_id, base):
             (nom_fichier, lieu_id),
         )
     base.commit()
+
+
 def effacer_lieu(base, lieu_id):
     """Supprime les photos (fichiers) d'un lieu, puis le lieu lui-même."""
     photos = base.execute(
@@ -73,6 +76,8 @@ def effacer_lieu(base, lieu_id):
 
     base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
     base.commit()
+
+
 @app.template_filter("fourchette")
 def fourchette(lieu):
     p1, p2 = lieu["prix_min"], lieu["prix_max"]
@@ -83,6 +88,8 @@ def fourchette(lieu):
     if p1 == 0:
         return f"Jusqu'à {p2:g} DT"
     return f"{p1:g} – {p2:g} DT"
+
+
 def login_required(vue):
     @wraps(vue)
     def vue_protegee(**kwargs):
@@ -129,18 +136,48 @@ def accueil():
     if onglet not in ("lieux", "sorties"):
         onglet = "lieux"
 
+    saison = request.args.get("saison", "")
+
+    # --- Onglet Sorties : filtres saison, prix et catégorie ---
     sorties = []
     if onglet == "sorties":
+        conditions = "WHERE 1 = 1"
+        params_sorties = []
+
+        if saison in SAISONS:
+            conditions += " AND sortie.saison = ?"
+            params_sorties.append(saison)
+
+        p_min = en_nombre(prix_min)
+        if p_min is not None:
+            conditions += " AND sortie.prix_max >= ?"
+            params_sorties.append(p_min)
+
+        p_max = en_nombre(prix_max)
+        if p_max is not None:
+            conditions += " AND sortie.prix_min <= ?"
+            params_sorties.append(p_max)
+
+        if categorie_id:
+            conditions += (
+                " AND sortie.id IN (SELECT sortie_lieu.sortie_id FROM sortie_lieu "
+                "JOIN lieu ON sortie_lieu.lieu_id = lieu.id "
+                "WHERE lieu.categorie_id = ?)"
+            )
+            params_sorties.append(categorie_id)
+
         sorties = base.execute(
             "SELECT sortie.*, utilisateur.pseudo AS auteur, "
             "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
             "FROM sortie "
             "JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
             "LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
-            "GROUP BY sortie.id "
-            "ORDER BY sortie.id DESC"
+            + conditions +
+            " GROUP BY sortie.id ORDER BY sortie.id DESC",
+            params_sorties,
         ).fetchall()
 
+    # --- Onglet Lieux : filtres catégorie, région, prix, ambiance ---
     tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
     ids_valides = {str(t["id"]) for t in tags}
     tags_choisis = [t for t in request.args.getlist("tags") if t in ids_valides]
@@ -215,7 +252,11 @@ def accueil():
         filtres=filtres,
         onglet=onglet,
         sorties=sorties,
+        saison=saison,
+        saisons=SAISONS,
     )
+
+
 # ---------- Comptes ----------
 @app.route("/inscription", methods=["GET", "POST"])
 def inscription():
@@ -392,6 +433,7 @@ def voir_lieu(lieu_id):
             (lieu_id, g.utilisateur["id"]),
         ).fetchone()
         peut_noter = deja is None
+
     mon_statut = None
     if g.utilisateur:
         ligne = base.execute(
@@ -400,6 +442,7 @@ def voir_lieu(lieu_id):
         ).fetchone()
         if ligne:
             mon_statut = ligne["statut"]
+
     return render_template(
         "lieu.html",
         lieu=lieu,
@@ -497,6 +540,7 @@ def supprimer_lieu(lieu_id):
     effacer_lieu(base, lieu_id)
     return redirect(url_for("accueil"))
 
+
 # ---------- Avis ----------
 @app.route("/lieux/<int:lieu_id>/avis", methods=["POST"])
 @login_required
@@ -531,6 +575,9 @@ def ajouter_avis(lieu_id):
         pass  # il a déjà donné un avis sur ce lieu
 
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
+
+# ---------- Listes "visité" / "à visiter" ----------
 @app.route("/lieux/<int:lieu_id>/liste", methods=["POST"])
 @login_required
 def changer_liste(lieu_id):
@@ -558,6 +605,8 @@ def changer_liste(lieu_id):
 
     base.commit()
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
+
 @app.route("/mes-lieux")
 @login_required
 def mes_lieux():
@@ -575,6 +624,9 @@ def mes_lieux():
     a_visiter = [l for l in lignes if l["statut"] == "à visiter"]
 
     return render_template("mes_lieux.html", visites=visites, a_visiter=a_visiter)
+
+
+# ---------- Confirmation et signalements ----------
 @app.route("/lieux/<int:lieu_id>/confirmer", methods=["POST"])
 @login_required
 def confirmer_lieu(lieu_id):
@@ -590,6 +642,7 @@ def confirmer_lieu(lieu_id):
     )
     base.commit()
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
 
 @app.route("/lieux/<int:lieu_id>/signaler", methods=["POST"])
 @login_required
@@ -610,6 +663,7 @@ def signaler_lieu(lieu_id):
     base.commit()
     flash("Merci, ton signalement a été envoyé. Un administrateur va le vérifier.")
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
 
 @app.route("/avis/<int:avis_id>/signaler", methods=["POST"])
 @login_required
@@ -689,6 +743,33 @@ def supprimer_contenu_signale(signalement_id):
     return redirect(url_for("admin_signalements"))
 
 
+# ---------- Sorties ----------
+def sortie_modifiable(base, sortie_id):
+    """Renvoie la sortie si l'utilisateur a le droit de la modifier, sinon erreur."""
+    sortie = base.execute(
+        "SELECT * FROM sortie WHERE id = ?", (sortie_id,)
+    ).fetchone()
+    if sortie is None:
+        abort(404)
+    if sortie["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
+        abort(403)
+    return sortie
+
+
+@app.route("/sorties")
+def liste_sorties():
+    sorties = db.get_db().execute(
+        "SELECT sortie.*, utilisateur.pseudo AS auteur, "
+        "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
+        "FROM sortie "
+        "JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
+        "LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
+        "GROUP BY sortie.id "
+        "ORDER BY sortie.id DESC"
+    ).fetchall()
+    return render_template("sorties.html", sorties=sorties)
+
+
 @app.route("/sorties/creer", methods=["GET", "POST"])
 @login_required
 def creer_sortie():
@@ -724,16 +805,6 @@ def creer_sortie():
         return redirect(url_for("voir_sortie", sortie_id=curseur.lastrowid))
 
     return render_template("creer_sortie.html", saisons=SAISONS)
-def sortie_modifiable(base, sortie_id):
-    """Renvoie la sortie si l'utilisateur a le droit de la modifier, sinon erreur."""
-    sortie = base.execute(
-        "SELECT * FROM sortie WHERE id = ?", (sortie_id,)
-    ).fetchone()
-    if sortie is None:
-        abort(404)
-    if sortie["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
-        abort(403)
-    return sortie
 
 
 @app.route("/sorties/<int:sortie_id>")
@@ -821,18 +892,8 @@ def retirer_lieu_sortie(sortie_id, lieu_id):
     )
     base.commit()
     return redirect(url_for("voir_sortie", sortie_id=sortie_id))
-@app.route("/sorties")
-def liste_sorties():
-    sorties = db.get_db().execute(
-        "SELECT sortie.*, utilisateur.pseudo AS auteur, "
-        "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
-        "FROM sortie "
-        "JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
-        "LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
-        "GROUP BY sortie.id "
-        "ORDER BY sortie.id DESC"
-    ).fetchall()
-    return render_template("sorties.html", sorties=sorties)
+
+
 @app.route("/sorties/<int:sortie_id>/modifier", methods=["GET", "POST"])
 @login_required
 def modifier_sortie(sortie_id):
@@ -872,6 +933,7 @@ def modifier_sortie(sortie_id):
 
     return render_template("modifier_sortie.html", sortie=sortie, saisons=SAISONS)
 
+
 @app.route("/sorties/<int:sortie_id>/supprimer", methods=["POST"])
 @login_required
 def supprimer_sortie(sortie_id):
@@ -882,6 +944,9 @@ def supprimer_sortie(sortie_id):
     base.commit()
     flash("Sortie supprimée.")
     return redirect(url_for("liste_sorties"))
+
+
+# ---------- Recommandations ----------
 @app.route("/recommandations")
 @login_required
 def recommandations():

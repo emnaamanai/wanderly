@@ -97,7 +97,41 @@
   </nav>
   {% endif %}
 
-    {% else %}
+  {% else %}
+
+  <form method="get" class="filtres-wander mb-4">
+    <input type="hidden" name="onglet" value="sorties">
+    <div class="row g-2">
+      <div class="col-12 col-md-3">
+        <select name="categorie" class="form-select">
+          <option value="">Toutes les catégories</option>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {% if categorie_id == c.id|string %}selected{% endif %}>{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="saison" class="form-select">
+          <option value="">Toutes les saisons</option>
+          {% for s in saisons %}
+          <option value="{{ s }}" {% if saison == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <input type="number" name="prix_min" class="form-control" min="0" step="1"
+               placeholder="Prix min (DT)" value="{{ prix_min }}">
+      </div>
+      <div class="col-6 col-md-2">
+        <input type="number" name="prix_max" class="form-control" min="0" step="1"
+               placeholder="Prix max (DT)" value="{{ prix_max }}">
+      </div>
+      <div class="col-12 col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-wander flex-grow-1">Filtrer</button>
+        <a href="{{ url_for('accueil', onglet='sorties') }}" class="btn btn-link">Effacer</a>
+      </div>
+    </div>
+  </form>
 
   {% if g.utilisateur %}
   <div class="mb-3">
@@ -128,7 +162,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <p>Aucune sortie pour l'instant.{% if g.utilisateur %} Crée la première !{% endif %}</p>
+  <p>Aucune sortie ne correspond à votre recherche.{% if g.utilisateur %} Crée-en une !{% endif %}</p>
   {% endif %}
 
   {% endif %}
