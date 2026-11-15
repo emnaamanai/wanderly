@@ -130,3 +130,14 @@ body {
 .filtres-wander summary {
   cursor: pointer;
 }
+/* Bouton secondaire violet */
+.btn-outline-wander {
+  border: 1px solid #6B4C9A;
+  color: #6B4C9A;
+  background: #FFFFFF;
+  border-radius: 50rem;
+}
+.btn-outline-wander:hover {
+  background: #EFE8F8;
+  color: #6B4C9A;
+}
