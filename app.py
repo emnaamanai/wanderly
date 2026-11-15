@@ -103,6 +103,10 @@ def accueil():
     prix_max = request.args.get("prix_max", "")
     page = request.args.get("page", 1, type=int)
 
+    tags = base.execute("SELECT * FROM tag_ambiance ORDER BY nom").fetchall()
+    ids_valides = {str(t["id"]) for t in tags}
+    tags_choisis = [t for t in request.args.getlist("tags") if t in ids_valides]
+
     depuis = (
         "FROM lieu JOIN categorie ON lieu.categorie_id = categorie.id "
         "WHERE 1 = 1"
@@ -125,6 +129,15 @@ def accueil():
         depuis += " AND lieu.prix <= ?"
         parametres.append(maximum)
 
+    if tags_choisis:
+        depuis += (
+            " AND lieu.id IN (SELECT lieu_id FROM lieu_tag WHERE tag_id IN ("
+            + ",".join("?" * len(tags_choisis))
+            + ") GROUP BY lieu_id HAVING COUNT(DISTINCT tag_id) = ?)"
+        )
+        parametres.extend(tags_choisis)
+        parametres.append(len(tags_choisis))
+
     total = base.execute("SELECT COUNT(*) " + depuis, parametres).fetchone()[0]
     nb_pages = max(1, (total + LIEUX_PAR_PAGE - 1) // LIEUX_PAR_PAGE)
     page = min(max(page, 1), nb_pages)
@@ -143,6 +156,7 @@ def accueil():
         "region": region,
         "prix_min": prix_min,
         "prix_max": prix_max,
+        "tags": tags_choisis,
     }
 
     return render_template(
@@ -150,6 +164,8 @@ def accueil():
         lieux=lieux,
         categories=categories,
         gouvernorats=GOUVERNORATS,
+        tags=tags,
+        tags_choisis=tags_choisis,
         categorie_id=categorie_id,
         region=region,
         prix_min=prix_min,
@@ -159,8 +175,6 @@ def accueil():
         nb_pages=nb_pages,
         filtres=filtres,
     )
-
-
 @app.route("/inscription", methods=["GET", "POST"])
 def inscription():
     if request.method == "POST":

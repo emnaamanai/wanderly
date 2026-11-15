@@ -126,3 +126,7 @@ body {
   border-color: #6B4C9A;
   color: #FFFFFF;
 }
+/* Titre repliable des filtres */
+.filtres-wander summary {
+  cursor: pointer;
+}
