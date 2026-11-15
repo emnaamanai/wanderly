@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ sortie.titre }} - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 800px;">
+  <a href="{{ url_for('accueil') }}" class="text-decoration-none wander-text">&larr; Retour à l'accueil</a>
+
+  <div class="mt-3">
+    <h1 class="h2">{{ sortie.titre }}</h1>
+    <p class="text-secondary">Sortie proposée par {{ sortie.auteur }}</p>
+    <div class="mb-3">
+      {% if sortie.duree %}<span class="badge-wander me-1">{{ sortie.duree }}</span>{% endif %}
+      <span class="badge-wander me-1">
+        {% if sortie.prix == 0 %}Gratuit{% else %}{{ "%g"|format(sortie.prix) }} DT par personne{% endif %}
+      </span>
+      {% if sortie.saison %}<span class="badge-wander me-1">{{ sortie.saison }}</span>{% endif %}
+      {% if sortie.taille_groupe %}<span class="badge-wander me-1">{{ sortie.taille_groupe }} personnes</span>{% endif %}
+    </div>
+    {% if sortie.description %}<p>{{ sortie.description }}</p>{% endif %}
+  </div>
+
+  <h2 class="h4 wander-text mt-4 mb-3">Programme</h2>
+
+  {% if lieux %}
+    {% for lieu in lieux %}
+    <div class="etape-sortie d-flex align-items-center gap-3 mb-2">
+      <span class="numero-etape">{{ loop.index }}</span>
+      <div class="flex-grow-1">
+        <a class="text-decoration-none lien-lieu fw-semibold" href="{{ url_for('voir_lieu', lieu_id=lieu.id) }}">{{ lieu.nom }}</a>
+        <div class="text-secondary small">{{ lieu.categorie }} · {{ lieu.region }}</div>
+      </div>
+      {% if peut_modifier %}
+      <form method="post" action="{{ url_for('retirer_lieu_sortie', sortie_id=sortie.id, lieu_id=lieu.id) }}">
+        <button type="submit" class="btn btn-link btn-sm">Retirer</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="text-secondary">Aucun lieu dans cette sortie pour l'instant.</p>
+  {% endif %}
+
+  {% if peut_modifier %}
+  <div class="infos-lieu mt-4">
+    <strong>Ajouter un lieu au programme</strong>
+    {% if disponibles %}
+    <form method="post" action="{{ url_for('ajouter_lieu_sortie', sortie_id=sortie.id) }}"
+          class="d-flex flex-wrap gap-2 mt-2">
+      <select class="form-select w-auto flex-grow-1" name="lieu_id" required>
+        {% for l in disponibles %}
+        <option value="{{ l.id }}">{{ l.nom }} ({{ l.region }})</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-wander">Ajouter</button>
+    </form>
+    {% else %}
+    <p class="mb-0 mt-2">Tous les lieux du site sont déjà dans cette sortie.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

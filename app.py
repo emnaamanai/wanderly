@@ -679,14 +679,111 @@ def creer_sortie():
             )
 
         base = db.get_db()
-        base.execute(
+        curseur = base.execute(
             "INSERT INTO sortie (titre, description, duree, prix, saison, "
             "taille_groupe, auteur_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (titre, description, duree, prix, saison or None,
              taille_groupe, g.utilisateur["id"]),
         )
         base.commit()
-        flash("Sortie créée.")
-        return redirect(url_for("accueil"))
+        flash("Sortie créée. Ajoute maintenant les lieux de ton programme.")
+        return redirect(url_for("voir_sortie", sortie_id=curseur.lastrowid))
 
     return render_template("creer_sortie.html", saisons=SAISONS)
+def sortie_modifiable(base, sortie_id):
+    """Renvoie la sortie si l'utilisateur a le droit de la modifier, sinon erreur."""
+    sortie = base.execute(
+        "SELECT * FROM sortie WHERE id = ?", (sortie_id,)
+    ).fetchone()
+    if sortie is None:
+        abort(404)
+    if sortie["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
+        abort(403)
+    return sortie
+
+
+@app.route("/sorties/<int:sortie_id>")
+def voir_sortie(sortie_id):
+    base = db.get_db()
+    sortie = base.execute(
+        "SELECT sortie.*, utilisateur.pseudo AS auteur "
+        "FROM sortie JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
+        "WHERE sortie.id = ?",
+        (sortie_id,),
+    ).fetchone()
+    if sortie is None:
+        abort(404)
+
+    lieux = base.execute(
+        "SELECT lieu.*, categorie.nom AS categorie, sortie_lieu.ordre AS ordre "
+        "FROM sortie_lieu "
+        "JOIN lieu ON sortie_lieu.lieu_id = lieu.id "
+        "JOIN categorie ON lieu.categorie_id = categorie.id "
+        "WHERE sortie_lieu.sortie_id = ? ORDER BY sortie_lieu.ordre",
+        (sortie_id,),
+    ).fetchall()
+
+    peut_modifier = bool(
+        g.utilisateur
+        and (g.utilisateur["id"] == sortie["auteur_id"]
+             or g.utilisateur["role"] == "admin")
+    )
+
+    disponibles = []
+    if peut_modifier:
+        disponibles = base.execute(
+            "SELECT id, nom, region FROM lieu "
+            "WHERE id NOT IN (SELECT lieu_id FROM sortie_lieu WHERE sortie_id = ?) "
+            "ORDER BY nom",
+            (sortie_id,),
+        ).fetchall()
+
+    return render_template(
+        "sortie.html",
+        sortie=sortie,
+        lieux=lieux,
+        peut_modifier=peut_modifier,
+        disponibles=disponibles,
+    )
+
+
+@app.route("/sorties/<int:sortie_id>/lieux", methods=["POST"])
+@login_required
+def ajouter_lieu_sortie(sortie_id):
+    base = db.get_db()
+    sortie_modifiable(base, sortie_id)
+
+    lieu_id = request.form.get("lieu_id", type=int)
+    lieu = base.execute("SELECT id FROM lieu WHERE id = ?", (lieu_id,)).fetchone()
+    if lieu is None:
+        abort(400)
+
+    ordre = base.execute(
+        "SELECT COALESCE(MAX(ordre), 0) + 1 FROM sortie_lieu WHERE sortie_id = ?",
+        (sortie_id,),
+    ).fetchone()[0]
+
+    try:
+        base.execute(
+            "INSERT INTO sortie_lieu (sortie_id, lieu_id, ordre) VALUES (?, ?, ?)",
+            (sortie_id, lieu_id, ordre),
+        )
+        base.commit()
+    except sqlite3.IntegrityError:
+        pass  # ce lieu est déjà dans la sortie
+
+    return redirect(url_for("voir_sortie", sortie_id=sortie_id))
+
+
+@app.route("/sorties/<int:sortie_id>/lieux/<int:lieu_id>/retirer", methods=["POST"])
+@login_required
+def retirer_lieu_sortie(sortie_id, lieu_id):
+    base = db.get_db()
+    sortie_modifiable(base, sortie_id)
+
+    base.execute(
+        "DELETE FROM sortie_lieu WHERE sortie_id = ? AND lieu_id = ?",
+        (sortie_id, lieu_id),
+    )
+    base.commit()
+    return redirect(url_for("voir_sortie", sortie_id=sortie_id))

@@ -152,3 +152,22 @@ body {
   border-radius: 1rem;
   padding: 1rem;
 }
+/* Étapes d'une sortie */
+.etape-sortie {
+  background: #FFFFFF;
+  border: 1px solid #E3D9F2;
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+}
+.numero-etape {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #6B4C9A;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
