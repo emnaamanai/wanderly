@@ -600,3 +600,21 @@ def signaler_avis(avis_id):
     base.commit()
     flash("Merci, ton signalement a été envoyé. Un administrateur va le vérifier.")
     return redirect(url_for("voir_lieu", lieu_id=avis["lieu_id"]))
+
+
+@app.route("/admin/signalements")
+@admin_required
+def admin_signalements():
+    signalements = db.get_db().execute(
+        "SELECT signalement.*, "
+        "utilisateur.pseudo AS auteur, "
+        "lieu.nom AS lieu_nom, "
+        "avis.commentaire AS avis_commentaire, avis.lieu_id AS avis_lieu_id "
+        "FROM signalement "
+        "JOIN utilisateur ON signalement.auteur_id = utilisateur.id "
+        "LEFT JOIN lieu ON signalement.lieu_id = lieu.id "
+        "LEFT JOIN avis ON signalement.avis_id = avis.id "
+        "WHERE signalement.statut = 'en attente' "
+        "ORDER BY signalement.id DESC"
+    ).fetchall()
+    return render_template("admin_signalements.html", signalements=signalements)

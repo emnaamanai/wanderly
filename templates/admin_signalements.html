@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block titre %}Signalements - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 800px;">
+  <h1 class="h3 wander-text mb-4">Signalements en attente</h1>
+
+  {% for s in signalements %}
+  <div class="avis-carte mb-3">
+    <div class="d-flex justify-content-between">
+      <strong>{{ s.motif }}</strong>
+      <span class="text-secondary small">{{ s.date_creation }} · signalé par {{ s.auteur }}</span>
+    </div>
+    {% if s.lieu_id %}
+      <p class="mb-0">Lieu :
+        <a href="{{ url_for('voir_lieu', lieu_id=s.lieu_id) }}">{{ s.lieu_nom }}</a>
+      </p>
+    {% else %}
+      <p class="mb-0">Avis : « {{ s.avis_commentaire or "(sans commentaire)" }} »
+        <a href="{{ url_for('voir_lieu', lieu_id=s.avis_lieu_id) }}">voir le lieu</a>
+      </p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="text-secondary">Aucun signalement en attente.</p>
+  {% endfor %}
+</div>
+{% endblock %}
