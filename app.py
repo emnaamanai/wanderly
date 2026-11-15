@@ -60,7 +60,18 @@ def enregistrer_photos(fichiers, lieu_id, base):
             (nom_fichier, lieu_id),
         )
     base.commit()
+def effacer_lieu(base, lieu_id):
+    """Supprime les photos (fichiers) d'un lieu, puis le lieu lui-même."""
+    photos = base.execute(
+        "SELECT nom_fichier FROM photo WHERE lieu_id = ?", (lieu_id,)
+    ).fetchall()
+    for photo in photos:
+        chemin = os.path.join(DOSSIER_PHOTOS, photo["nom_fichier"])
+        if os.path.exists(chemin):
+            os.remove(chemin)
 
+    base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
+    base.commit()
 
 def login_required(vue):
     @wraps(vue)
@@ -450,18 +461,8 @@ def supprimer_lieu(lieu_id):
     if lieu["auteur_id"] != g.utilisateur["id"] and g.utilisateur["role"] != "admin":
         abort(403)
 
-    photos = base.execute(
-        "SELECT nom_fichier FROM photo WHERE lieu_id = ?", (lieu_id,)
-    ).fetchall()
-    for photo in photos:
-        chemin = os.path.join(DOSSIER_PHOTOS, photo["nom_fichier"])
-        if os.path.exists(chemin):
-            os.remove(chemin)
-
-    base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
-    base.commit()
+    effacer_lieu(base, lieu_id)
     return redirect(url_for("accueil"))
-
 
 # ---------- Avis ----------
 @app.route("/lieux/<int:lieu_id>/avis", methods=["POST"])
@@ -618,3 +619,38 @@ def admin_signalements():
         "ORDER BY signalement.id DESC"
     ).fetchall()
     return render_template("admin_signalements.html", signalements=signalements)
+
+
+@app.route("/admin/signalements/<int:signalement_id>/conserver", methods=["POST"])
+@admin_required
+def conserver_signalement(signalement_id):
+    base = db.get_db()
+    curseur = base.execute(
+        "UPDATE signalement SET statut = 'traité' WHERE id = ?", (signalement_id,)
+    )
+    if curseur.rowcount == 0:
+        abort(404)
+    base.commit()
+    flash("Signalement traité : le contenu est conservé.")
+    return redirect(url_for("admin_signalements"))
+
+
+@app.route("/admin/signalements/<int:signalement_id>/supprimer", methods=["POST"])
+@admin_required
+def supprimer_contenu_signale(signalement_id):
+    base = db.get_db()
+    s = base.execute(
+        "SELECT * FROM signalement WHERE id = ?", (signalement_id,)
+    ).fetchone()
+    if s is None:
+        abort(404)
+
+    if s["lieu_id"] is not None:
+        effacer_lieu(base, s["lieu_id"])
+        flash("Lieu supprimé.")
+    else:
+        base.execute("DELETE FROM avis WHERE id = ?", (s["avis_id"],))
+        base.commit()
+        flash("Avis supprimé.")
+
+    return redirect(url_for("admin_signalements"))

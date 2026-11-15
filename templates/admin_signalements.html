@@ -21,6 +21,17 @@
         <a href="{{ url_for('voir_lieu', lieu_id=s.avis_lieu_id) }}">voir le lieu</a>
       </p>
     {% endif %}
+            <div class="d-flex gap-2 mt-3">
+      <form method="post" action="{{ url_for('conserver_signalement', signalement_id=s.id) }}">
+        <button type="submit" class="btn btn-outline-wander btn-sm">Conserver</button>
+      </form>
+      <form method="post" action="{{ url_for('supprimer_contenu_signale', signalement_id=s.id) }}"
+            onsubmit="return confirm('Supprimer définitivement ce contenu ?');">
+        <button type="submit" class="btn btn-wander btn-sm">
+          {% if s.lieu_id %}Supprimer le lieu{% else %}Supprimer l'avis{% endif %}
+        </button>
+      </form>
+    </div>
   </div>
   {% else %}
   <p class="text-secondary">Aucun signalement en attente.</p>
