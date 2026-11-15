@@ -17,6 +17,9 @@
         {% if g.utilisateur %}
           <a class="btn btn-link" href="{{ url_for('ajouter_lieu') }}">Ajouter un lieu</a>
           <a class="btn btn-link" href="{{ url_for('mes_lieux') }}">Mes lieux</a>
+          {% if g.utilisateur.role == 'admin' %}
+            <a class="btn btn-link" href="{{ url_for('admin_signalements') }}">Signalements</a>
+          {% endif %}
           <a class="me-2 text-decoration-none" href="{{ url_for('profil') }}">Bonjour, <strong class="wander-text">{{ g.utilisateur.pseudo }}</strong></a>
           <a class="btn btn-wander" href="{{ url_for('deconnexion') }}">Déconnexion</a>
         {% else %}

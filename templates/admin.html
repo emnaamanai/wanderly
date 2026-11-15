@@ -3,8 +3,15 @@
 {% block titre %}Administration - Wanderly{% endblock %}
 
 {% block contenu %}
-<div class="container my-5">
+<div class="container my-5" style="max-width: 800px;">
   <h1 class="h3 wander-text mb-4">Administration</h1>
-  <p>Bienvenue dans l'espace administrateur.</p>
+
+  <div class="card carte-lieu">
+    <div class="card-body">
+      <h2 class="h5">Signalements</h2>
+      <p class="text-secondary mb-3">Lieux et avis signalés par les membres, en attente de vérification.</p>
+      <a href="{{ url_for('admin_signalements') }}" class="btn btn-wander">Voir les signalements</a>
+    </div>
+  </div>
 </div>
 {% endblock %}
