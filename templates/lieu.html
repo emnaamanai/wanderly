@@ -153,6 +153,19 @@
     </div>
     <div class="text-secondary small mb-2">Visité le {{ a.date_visite }}</div>
     {% if a.commentaire %}<p class="mb-0">{{ a.commentaire }}</p>{% endif %}
+        {% if g.utilisateur and g.utilisateur.id != a.auteur_id %}
+    <details class="mt-2">
+      <summary class="text-secondary small">Signaler cet avis</summary>
+      <form method="post" action="{{ url_for('signaler_avis', avis_id=a.id) }}"
+            class="d-flex flex-wrap gap-2 mt-2">
+        <select class="form-select form-select-sm w-auto" name="motif" required>
+          <option value="information fausse">Information fausse</option>
+          <option value="contenu inapproprié">Contenu inapproprié</option>
+        </select>
+        <button type="submit" class="btn btn-outline-wander btn-sm">Envoyer</button>
+      </form>
+    </details>
+    {% endif %}
   </div>
   {% endfor %}
 </div>

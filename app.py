@@ -30,7 +30,7 @@ GOUVERNORATS = [
     "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan",
 ]
 MOTIFS = ["fermé", "doublon", "information fausse", "contenu inapproprié"]
-
+MOTIFS_AVIS = ["information fausse", "contenu inapproprié"]
 @app.errorhandler(413)
 def fichier_trop_lourd(erreur):
     return "Les fichiers envoyés sont trop lourds (10 Mo maximum).", 413
@@ -576,4 +576,27 @@ def signaler_lieu(lieu_id):
     base.commit()
     flash("Merci, ton signalement a été envoyé. Un administrateur va le vérifier.")
     return redirect(url_for("voir_lieu", lieu_id=lieu_id))
-    return redirect(url_for("voir_lieu", lieu_id=lieu_id))
+
+@app.route("/avis/<int:avis_id>/signaler", methods=["POST"])
+@login_required
+def signaler_avis(avis_id):
+    base = db.get_db()
+    avis = base.execute(
+        "SELECT id, lieu_id, auteur_id FROM avis WHERE id = ?", (avis_id,)
+    ).fetchone()
+    if avis is None:
+        abort(404)
+    if avis["auteur_id"] == g.utilisateur["id"]:
+        abort(403)
+
+    motif = request.form.get("motif")
+    if motif not in MOTIFS_AVIS:
+        abort(400)
+
+    base.execute(
+        "INSERT INTO signalement (motif, auteur_id, avis_id) VALUES (?, ?, ?)",
+        (motif, g.utilisateur["id"], avis_id),
+    )
+    base.commit()
+    flash("Merci, ton signalement a été envoyé. Un administrateur va le vérifier.")
+    return redirect(url_for("voir_lieu", lieu_id=avis["lieu_id"]))
