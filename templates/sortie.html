@@ -18,6 +18,15 @@
       {% if sortie.taille_groupe %}<span class="badge-wander me-1">{{ sortie.taille_groupe }} personnes</span>{% endif %}
     </div>
     {% if sortie.description %}<p>{{ sortie.description }}</p>{% endif %}
+        {% if peut_modifier %}
+    <div class="d-flex gap-2 mb-2">
+      <a class="btn btn-wander btn-sm" href="{{ url_for('modifier_sortie', sortie_id=sortie.id) }}">Modifier la sortie</a>
+      <form method="post" action="{{ url_for('supprimer_sortie', sortie_id=sortie.id) }}"
+            onsubmit="return confirm('Supprimer cette sortie ? Les lieux ne seront pas supprimés.');">
+        <button type="submit" class="btn btn-outline-wander btn-sm">Supprimer la sortie</button>
+      </form>
+    </div>
+    {% endif %}
   </div>
 
   <h2 class="h4 wander-text mt-4 mb-3">Programme</h2>

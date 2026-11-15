@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block titre %}Modifier {{ sortie.titre }} - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 640px;">
+  <h1 class="h3 wander-text mb-4">Modifier la sortie</h1>
+
+  {% if erreur %}
+  <div class="alert-wander mb-3">{{ erreur }}</div>
+  {% endif %}
+
+  <form method="post">
+    <div class="mb-3">
+      <label for="titre" class="form-label">Titre *</label>
+      <input type="text" class="form-control" id="titre" name="titre" value="{{ sortie.titre }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3">{{ sortie.description or '' }}</textarea>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label for="duree" class="form-label">Durée</label>
+        <input type="text" class="form-control" id="duree" name="duree" value="{{ sortie.duree or '' }}">
+      </div>
+      <div class="col-md-6">
+        <label for="prix" class="form-label">Budget par personne (DT) *</label>
+        <input type="number" class="form-control" id="prix" name="prix" min="0" step="0.5"
+               value="{{ '%g'|format(sortie.prix) }}" required>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label for="saison" class="form-label">Saison idéale</label>
+        <select class="form-select" id="saison" name="saison">
+          <option value="">Pas de préférence</option>
+          {% for s in saisons %}
+          <option value="{{ s }}" {% if sortie.saison == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="taille_groupe" class="form-label">Taille du groupe</label>
+        <input type="number" class="form-control" id="taille_groupe" name="taille_groupe" min="1"
+               value="{{ sortie.taille_groupe or '' }}">
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-wander flex-grow-1">Enregistrer</button>
+      <a href="{{ url_for('voir_sortie', sortie_id=sortie.id) }}" class="btn btn-outline-wander">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

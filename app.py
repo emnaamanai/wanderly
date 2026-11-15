@@ -799,3 +799,51 @@ def liste_sorties():
         "ORDER BY sortie.id DESC"
     ).fetchall()
     return render_template("sorties.html", sorties=sorties)
+@app.route("/sorties/<int:sortie_id>/modifier", methods=["GET", "POST"])
+@login_required
+def modifier_sortie(sortie_id):
+    base = db.get_db()
+    sortie = sortie_modifiable(base, sortie_id)
+
+    if request.method == "POST":
+        titre = request.form["titre"].strip()
+        description = request.form["description"].strip()
+        duree = request.form["duree"].strip()
+        prix = en_nombre(request.form["prix"])
+        saison = request.form["saison"]
+        taille_groupe = request.form.get("taille_groupe", type=int)
+
+        if (not titre or prix is None or prix < 0
+                or (saison and saison not in SAISONS)
+                or (taille_groupe is not None and taille_groupe < 1)):
+            return render_template(
+                "modifier_sortie.html",
+                erreur="Merci de remplir correctement les champs obligatoires.",
+                sortie=sortie,
+                saisons=SAISONS,
+            )
+
+        base.execute(
+            "UPDATE sortie SET titre = ?, description = ?, duree = ?, prix = ?, "
+            "saison = ?, taille_groupe = ? WHERE id = ?",
+            (titre, description, duree, prix, saison or None,
+             taille_groupe, sortie_id),
+        )
+        base.commit()
+        flash("Sortie modifiée.")
+        return redirect(url_for("voir_sortie", sortie_id=sortie_id))
+
+    return render_template("modifier_sortie.html", sortie=sortie, saisons=SAISONS)
+
+
+@app.route("/sorties/<int:sortie_id>/supprimer", methods=["POST"])
+@login_required
+def supprimer_sortie(sortie_id):
+    base = db.get_db()
+    sortie_modifiable(base, sortie_id)
+
+    base.execute("DELETE FROM sortie WHERE id = ?", (sortie_id,))
+    base.commit()
+    flash("Sortie supprimée.")
+    return redirect(url_for("liste_sorties"))
+
