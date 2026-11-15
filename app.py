@@ -31,6 +31,8 @@ GOUVERNORATS = [
 ]
 MOTIFS = ["fermé", "doublon", "information fausse", "contenu inapproprié"]
 MOTIFS_AVIS = ["information fausse", "contenu inapproprié"]
+SAISONS = ["printemps", "été", "automne", "hiver", "toute l'année"]
+
 @app.errorhandler(413)
 def fichier_trop_lourd(erreur):
     return "Les fichiers envoyés sont trop lourds (10 Mo maximum).", 413
@@ -654,3 +656,37 @@ def supprimer_contenu_signale(signalement_id):
         flash("Avis supprimé.")
 
     return redirect(url_for("admin_signalements"))
+
+
+@app.route("/sorties/creer", methods=["GET", "POST"])
+@login_required
+def creer_sortie():
+    if request.method == "POST":
+        titre = request.form["titre"].strip()
+        description = request.form["description"].strip()
+        duree = request.form["duree"].strip()
+        prix = en_nombre(request.form["prix"])
+        saison = request.form["saison"]
+        taille_groupe = request.form.get("taille_groupe", type=int)
+
+        if (not titre or prix is None or prix < 0
+                or (saison and saison not in SAISONS)
+                or (taille_groupe is not None and taille_groupe < 1)):
+            return render_template(
+                "creer_sortie.html",
+                erreur="Merci de remplir correctement les champs obligatoires.",
+                saisons=SAISONS,
+            )
+
+        base = db.get_db()
+        base.execute(
+            "INSERT INTO sortie (titre, description, duree, prix, saison, "
+            "taille_groupe, auteur_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (titre, description, duree, prix, saison or None,
+             taille_groupe, g.utilisateur["id"]),
+        )
+        base.commit()
+        flash("Sortie créée.")
+        return redirect(url_for("accueil"))
+
+    return render_template("creer_sortie.html", saisons=SAISONS)
