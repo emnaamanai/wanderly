@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block titre %}Ajouter un lieu - Wanderly{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block contenu %}
+<div class="container my-5" style="max-width: 640px;">
+  <h1 class="h3 wander-text mb-4">Ajouter un lieu</h1>
+
+  {% if erreur %}
+  <div class="alert-wander mb-3">{{ erreur }}</div>
+  {% endif %}
+
+  <form method="post">
+    <div class="mb-3">
+      <label for="nom" class="form-label">Nom du lieu *</label>
+      <input type="text" class="form-control" id="nom" name="nom" required>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label for="categorie" class="form-label">Catégorie *</label>
+        <select class="form-select" id="categorie" name="categorie" required>
+          {% for c in categories %}
+          <option value="{{ c.id }}">{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="region" class="form-label">Région *</label>
+        <select class="form-select" id="region" name="region" required>
+          {% for r in gouvernorats %}
+          <option value="{{ r }}">{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="prix" class="form-label">Prix moyen par personne (DT) *</label>
+      <input type="number" class="form-control" id="prix" name="prix" min="0" step="0.5" value="0" required>
+      <div class="form-text">Mets 0 si le lieu est gratuit.</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="infos_pratiques" class="form-label">Infos pratiques (horaires, accès, parking...)</label>
+      <textarea class="form-control" id="infos_pratiques" name="infos_pratiques" rows="2"></textarea>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Emplacement * <span class="text-secondary small">(clique sur la carte pour placer le lieu)</span></label>
+            <div class="input-group mb-2">
+        <input type="text" id="recherche-lieu" class="form-control"
+               placeholder="Chercher un quartier ou une ville (ex : Mourouj 6)">
+        <button type="button" id="bouton-recherche" class="btn btn-wander">Chercher</button>
+      </div>
+      <div id="msg-recherche" class="text-secondary small mb-2"></div>
+      <div id="carte-choix" class="carte-choix"></div>
+      <input type="hidden" id="latitude" name="latitude">
+      <input type="hidden" id="longitude" name="longitude">
+      <div id="msg-emplacement" class="alert-wander mt-2" style="display: none;">
+        Merci de choisir l'emplacement en cliquant sur la carte.
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-wander w-100">Ajouter le lieu</button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  var carte = L.map('carte-choix').setView([34.0, 9.5], 6);
+
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(carte);
+
+  var marqueur = null;
+
+  carte.on('click', function (e) {
+    document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+    document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
+    document.getElementById('msg-emplacement').style.display = 'none';
+
+    if (marqueur === null) {
+      marqueur = L.marker(e.latlng).addTo(carte);
+    } else {
+      marqueur.setLatLng(e.latlng);
+    }
+  });
+
+  document.querySelector('form').addEventListener('submit', function (e) {
+    if (document.getElementById('latitude').value === '') {
+      e.preventDefault();
+      document.getElementById('msg-emplacement').style.display = 'block';
+    }
+  });
+    function chercher() {
+    var texte = document.getElementById('recherche-lieu').value.trim();
+    var msg = document.getElementById('msg-recherche');
+    if (texte === '') {
+      return;
+    }
+    msg.textContent = 'Recherche en cours...';
+
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=tn&q='
+          + encodeURIComponent(texte))
+      .then(function (reponse) { return reponse.json(); })
+      .then(function (resultats) {
+        if (resultats.length === 0) {
+          msg.textContent = "Aucun résultat. Essaie un autre nom, ou zoome sur la carte à la main.";
+          return;
+        }
+        carte.setView([parseFloat(resultats[0].lat), parseFloat(resultats[0].lon)], 15);
+        msg.textContent = resultats[0].display_name;
+      })
+      .catch(function () {
+        msg.textContent = "La recherche a échoué. Tu peux zoomer sur la carte à la main.";
+      });
+  }
+
+  document.getElementById('bouton-recherche').addEventListener('click', chercher);
+
+  document.getElementById('recherche-lieu').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      chercher();
+    }
+  });
+</script>
+{% endblock %}

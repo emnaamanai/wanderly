@@ -74,3 +74,9 @@ body {
 .pagination-wander .page-link:hover {
   background: #EFE8F8;
 }
+/* Carte pour choisir un emplacement */
+.carte-choix {
+  height: 350px;
+  border-radius: 1rem;
+  border: 1px solid #E3D9F2;
+}

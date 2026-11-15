@@ -193,3 +193,40 @@ def profil():
 @admin_required
 def admin():
     return render_template("admin.html")
+@app.route("/lieux/ajouter", methods=["GET", "POST"])
+@login_required
+def ajouter_lieu():
+    base = db.get_db()
+    categories = base.execute("SELECT * FROM categorie ORDER BY nom").fetchall()
+
+    if request.method == "POST":
+        nom = request.form["nom"].strip()
+        categorie_id = request.form["categorie"]
+        region = request.form["region"]
+        description = request.form["description"].strip()
+        infos_pratiques = request.form["infos_pratiques"].strip()
+        prix = en_nombre(request.form["prix"])
+        latitude = en_nombre(request.form["latitude"])
+        longitude = en_nombre(request.form["longitude"])
+
+        if (not nom or region not in GOUVERNORATS or prix is None or prix < 0
+                or latitude is None or longitude is None):
+            return render_template(
+                "ajouter_lieu.html",
+                erreur="Merci de remplir correctement tous les champs obligatoires.",
+                categories=categories,
+                gouvernorats=GOUVERNORATS,
+            )
+
+        base.execute(
+            "INSERT INTO lieu (nom, description, region, prix, latitude, longitude, "
+            "infos_pratiques, auteur_id, categorie_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (nom, description, region, prix, latitude, longitude,
+             infos_pratiques, g.utilisateur["id"], categorie_id),
+        )
+        base.commit()
+        return redirect(url_for("accueil"))
+
+    return render_template(
+        "ajouter_lieu.html", categories=categories, gouvernorats=GOUVERNORATS
+    )
