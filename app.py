@@ -964,7 +964,7 @@ def supprimer_sortie(sortie_id):
     base.execute("DELETE FROM sortie WHERE id = ?", (sortie_id,))
     base.commit()
     flash("Sortie supprimée.")
-    return redirect(url_for("liste_sorties"))
+    return redirect(url_for("accueil", onglet="sorties"))
 
 
 # ---------- Recommandations ----------

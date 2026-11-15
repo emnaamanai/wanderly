@@ -14,7 +14,6 @@
     <div class="container">
       <a class="navbar-brand fw-bold wander-text" href="{{ url_for('accueil') }}">Wanderly</a>
       <div>
-          <a class="btn btn-link" href="{{ url_for('liste_sorties') }}">Sorties</a>
         {% if g.utilisateur %}
           <a class="btn btn-link" href="{{ url_for('ajouter_lieu') }}">Ajouter un lieu</a>
           <a class="btn btn-link" href="{{ url_for('mes_lieux') }}">Mes lieux</a>
