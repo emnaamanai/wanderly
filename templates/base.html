@@ -23,7 +23,8 @@
             <a class="btn btn-link" href="{{ url_for('admin_signalements') }}">Signalements</a>
           {% endif %}
           <a class="me-2 text-decoration-none" href="{{ url_for('profil') }}">Bonjour, <strong class="wander-text">{{ g.utilisateur.pseudo }}</strong></a>
-          <a class="btn btn-wander" href="{{ url_for('deconnexion') }}">Déconnexion</a>
+          <a class="btn btn-wander" href="{{ url_for('deconnexion') }}"
+   onclick="return confirm('Tu veux vraiment te déconnecter ?');">Déconnexion</a>
         {% else %}
           <a class="btn btn-link" href="{{ url_for('connexion') }}">Connexion</a>
           <a class="btn btn-wander" href="{{ url_for('inscription') }}">S'inscrire</a>

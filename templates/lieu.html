@@ -14,8 +14,7 @@
     <span class="badge-wander">{{ lieu.categorie }}</span>
     <h1 class="h2 mt-2">{{ lieu.nom }}</h1>
     <p class="text-secondary">
-      {{ lieu.region }} ·
-      {% if lieu.prix == 0 %}Gratuit{% else %}{{ "%g"|format(lieu.prix) }} DT par personne{% endif %}
+      {{ lieu.region }} · {{ lieu|fourchette }}
       · Ajouté par {{ lieu.auteur }}
     </p>
         {% if tags %}

@@ -59,7 +59,7 @@
         <div class="card-body">
           <span class="badge-wander">{{ lieu.categorie }}</span>
           <h2 class="h5 mt-2"><a class="stretched-link text-decoration-none lien-lieu" href="{{ url_for('voir_lieu', lieu_id=lieu.id) }}">{{ lieu.nom }}</a></h2>
-          <p class="text-secondary small mb-2">{{ lieu.region }} · {% if lieu.prix == 0 %}Gratuit{% else %}{{ "%g"|format(lieu.prix) }} DT{% endif %}</p>
+          <p class="text-secondary small mb-2">{{ lieu.region }} · {{ lieu|fourchette }}</p>
           <p class="card-text">{{ lieu.description }}</p>
         </div>
       </div>

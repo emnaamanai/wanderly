@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 
 {% block titre %}Ajouter un lieu - Wanderly{% endblock %}
+
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 {% endblock %}
+
 {% block contenu %}
 <div class="container my-5" style="max-width: 640px;">
   <h1 class="h3 wander-text mb-4">Ajouter un lieu</h1>
@@ -12,7 +14,7 @@
   <div class="alert-wander mb-3">{{ erreur }}</div>
   {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data">
     <div class="mb-3">
       <label for="nom" class="form-label">Nom du lieu *</label>
       <input type="text" class="form-control" id="nom" name="nom" required>
@@ -30,6 +32,7 @@
       <div class="col-md-6">
         <label for="region" class="form-label">Région *</label>
         <select class="form-select" id="region" name="region" required>
+          <option value="">Choisir une région</option>
           {% for r in gouvernorats %}
           <option value="{{ r }}">{{ r }}</option>
           {% endfor %}
@@ -37,11 +40,21 @@
       </div>
     </div>
 
-    <div class="mb-3">
-      <label for="prix" class="form-label">Prix moyen par personne (DT) *</label>
-      <input type="number" class="form-control" id="prix" name="prix" min="0" step="0.5" value="0" required>
-      <div class="form-text">Mets 0 si le lieu est gratuit.</div>
+        <div class="mb-3">
+      <label class="form-label">Fourchette de prix par personne (DT) *</label>
+      <div class="row g-2">
+        <div class="col-6">
+          <input type="number" class="form-control" id="prix_min" name="prix_min"
+                 min="0" step="0.5" value="0" placeholder="Minimum" required>
+        </div>
+        <div class="col-6">
+          <input type="number" class="form-control" id="prix_max" name="prix_max"
+                 min="0" step="0.5" value="0" placeholder="Maximum" required>
+        </div>
+      </div>
+      <div class="form-text">Exemple : 10 et 20. Mets 0 et 0 si le lieu est gratuit, ou le même nombre deux fois si le prix est fixe.</div>
     </div>
+
     <div class="mb-3">
       <label class="form-label">Ambiance <span class="text-secondary small">(choisis ce qui correspond)</span></label>
       <div class="d-flex flex-wrap gap-2">
@@ -51,6 +64,7 @@
         {% endfor %}
       </div>
     </div>
+
     <div class="mb-3">
       <label for="description" class="form-label">Description</label>
       <textarea class="form-control" id="description" name="description" rows="3"></textarea>
@@ -60,7 +74,8 @@
       <label for="infos_pratiques" class="form-label">Infos pratiques (horaires, accès, parking...)</label>
       <textarea class="form-control" id="infos_pratiques" name="infos_pratiques" rows="2"></textarea>
     </div>
-        <div class="mb-3">
+
+    <div class="mb-3">
       <label for="photos" class="form-label">Photos (5 maximum)</label>
       <input type="file" class="form-control" id="photos" name="photos"
              accept=".jpg,.jpeg,.png,.webp" multiple>
@@ -68,8 +83,8 @@
     </div>
 
     <div class="mb-4">
-      <label class="form-label">Emplacement * <span class="text-secondary small">(clique sur la carte pour placer le lieu)</span></label>
-            <div class="input-group mb-2">
+      <label class="form-label">Emplacement * <span class="text-secondary small">(choisis la région, puis clique sur la carte pour placer le lieu)</span></label>
+      <div class="input-group mb-2">
         <input type="text" id="recherche-lieu" class="form-control"
                placeholder="Chercher un quartier ou une ville (ex : Mourouj 6)">
         <button type="button" id="bouton-recherche" class="btn btn-wander">Chercher</button>
@@ -87,6 +102,7 @@
   </form>
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -117,7 +133,8 @@
       document.getElementById('msg-emplacement').style.display = 'block';
     }
   });
-    function chercher() {
+
+  function chercher() {
     var texte = document.getElementById('recherche-lieu').value.trim();
     var msg = document.getElementById('msg-recherche');
     if (texte === '') {
@@ -147,6 +164,40 @@
     if (e.key === 'Enter') {
       e.preventDefault();
       chercher();
+    }
+  });
+
+  var centresRegions = {
+    "Ariana": [36.8625, 10.1956, 11],
+    "Béja": [36.7256, 9.1817, 10],
+    "Ben Arous": [36.7531, 10.2189, 11],
+    "Bizerte": [37.2744, 9.8739, 10],
+    "Gabès": [33.8815, 10.0982, 9],
+    "Gafsa": [34.4250, 8.7842, 9],
+    "Jendouba": [36.5011, 8.7803, 10],
+    "Kairouan": [35.6781, 10.0963, 9],
+    "Kasserine": [35.1676, 8.8365, 9],
+    "Kébili": [33.7044, 8.9690, 8],
+    "Le Kef": [36.1742, 8.7049, 10],
+    "Mahdia": [35.5047, 11.0622, 10],
+    "La Manouba": [36.8101, 10.0863, 11],
+    "Médenine": [33.3549, 10.5055, 9],
+    "Monastir": [35.7643, 10.8113, 11],
+    "Nabeul": [36.4561, 10.7376, 10],
+    "Sfax": [34.7406, 10.7603, 10],
+    "Sidi Bouzid": [35.0382, 9.4849, 9],
+    "Siliana": [36.0849, 9.3708, 10],
+    "Sousse": [35.8256, 10.6369, 11],
+    "Tataouine": [32.9297, 10.4518, 8],
+    "Tozeur": [33.9197, 8.1335, 9],
+    "Tunis": [36.8065, 10.1815, 11],
+    "Zaghouan": [36.4029, 10.1429, 10]
+  };
+
+  document.getElementById('region').addEventListener('change', function () {
+    var centre = centresRegions[this.value];
+    if (centre) {
+      carte.setView([centre[0], centre[1]], centre[2]);
     }
   });
 </script>

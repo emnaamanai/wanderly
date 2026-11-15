@@ -9,8 +9,7 @@ from flask import (
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "wanderly-cle-secrete-a-changer-123"
-
+app.secret_key = os.environ.get("WANDERLY_SECRET_KEY", "cle-de-developpement-locale")
 import db
 db.init_app(app)
 
@@ -74,7 +73,16 @@ def effacer_lieu(base, lieu_id):
 
     base.execute("DELETE FROM lieu WHERE id = ?", (lieu_id,))
     base.commit()
-
+@app.template_filter("fourchette")
+def fourchette(lieu):
+    p1, p2 = lieu["prix_min"], lieu["prix_max"]
+    if p2 == 0:
+        return "Gratuit"
+    if p1 == p2:
+        return f"{p1:g} DT"
+    if p1 == 0:
+        return f"Jusqu'à {p2:g} DT"
+    return f"{p1:g} – {p2:g} DT"
 def login_required(vue):
     @wraps(vue)
     def vue_protegee(**kwargs):
@@ -136,11 +144,12 @@ def accueil():
 
     minimum = en_nombre(prix_min)
     if minimum is not None:
-        depuis += " AND lieu.prix >= ?"
+        depuis += " AND lieu.prix_max >= ?"
         parametres.append(minimum)
+
     maximum = en_nombre(prix_max)
     if maximum is not None:
-        depuis += " AND lieu.prix <= ?"
+        depuis += " AND lieu.prix_min <= ?"
         parametres.append(maximum)
 
     if tags_choisis:
@@ -163,7 +172,7 @@ def accueil():
     ).fetchall()
 
     categories = base.execute("SELECT * FROM categorie ORDER BY nom").fetchall()
-    prix_le_plus_haut = base.execute("SELECT MAX(prix) FROM lieu").fetchone()[0] or 0
+    prix_le_plus_haut = base.execute("SELECT MAX(prix_max) FROM lieu").fetchone()[0] or 0
 
     filtres = {
         "categorie": categorie_id,
@@ -189,7 +198,6 @@ def accueil():
         nb_pages=nb_pages,
         filtres=filtres,
     )
-
 
 # ---------- Comptes ----------
 @app.route("/inscription", methods=["GET", "POST"])
@@ -276,14 +284,17 @@ def ajouter_lieu():
         region = request.form["region"]
         description = request.form["description"].strip()
         infos_pratiques = request.form["infos_pratiques"].strip()
-        prix = en_nombre(request.form["prix"])
+        prix_min = en_nombre(request.form["prix_min"])
+        prix_max = en_nombre(request.form["prix_max"])
         latitude = en_nombre(request.form["latitude"])
         longitude = en_nombre(request.form["longitude"])
 
         ids_valides = {str(t["id"]) for t in tags}
         tags_choisis = [t for t in request.form.getlist("tags") if t in ids_valides]
 
-        if (not nom or region not in GOUVERNORATS or prix is None or prix < 0
+        if (not nom or region not in GOUVERNORATS
+                or prix_min is None or prix_max is None
+                or prix_min < 0 or prix_min > prix_max
                 or latitude is None or longitude is None):
             return render_template(
                 "ajouter_lieu.html",
@@ -294,9 +305,9 @@ def ajouter_lieu():
             )
 
         curseur = base.execute(
-            "INSERT INTO lieu (nom, description, region, prix, latitude, longitude, "
-            "infos_pratiques, auteur_id, categorie_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (nom, description, region, prix, latitude, longitude,
+            "INSERT INTO lieu (nom, description, region, prix_min, prix_max, latitude, longitude, "
+            "infos_pratiques, auteur_id, categorie_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (nom, description, region, prix_min, prix_max, latitude, longitude,
              infos_pratiques, g.utilisateur["id"], categorie_id),
         )
         lieu_id = curseur.lastrowid
@@ -412,12 +423,15 @@ def modifier_lieu(lieu_id):
         region = request.form["region"]
         description = request.form["description"].strip()
         infos_pratiques = request.form["infos_pratiques"].strip()
-        prix = en_nombre(request.form["prix"])
+        prix_min = en_nombre(request.form["prix_min"])
+        prix_max = en_nombre(request.form["prix_max"])
 
         ids_valides = {str(t["id"]) for t in tags}
         tags_choisis = [t for t in request.form.getlist("tags") if t in ids_valides]
 
-        if not nom or region not in GOUVERNORATS or prix is None or prix < 0:
+        if (not nom or region not in GOUVERNORATS
+                or prix_min is None or prix_max is None
+                or prix_min < 0 or prix_min > prix_max):
             return render_template(
                 "modifier_lieu.html",
                 erreur="Merci de remplir correctement tous les champs obligatoires.",
@@ -429,9 +443,9 @@ def modifier_lieu(lieu_id):
             )
 
         base.execute(
-            "UPDATE lieu SET nom = ?, description = ?, region = ?, prix = ?, "
+            "UPDATE lieu SET nom = ?, description = ?, region = ?, prix_min = ?, prix_max = ?, "
             "infos_pratiques = ?, categorie_id = ? WHERE id = ?",
-            (nom, description, region, prix, infos_pratiques, categorie_id, lieu_id),
+            (nom, description, region, prix_min, prix_max, infos_pratiques, categorie_id, lieu_id),
         )
         base.execute("DELETE FROM lieu_tag WHERE lieu_id = ?", (lieu_id,))
         for tag_id in tags_choisis:
