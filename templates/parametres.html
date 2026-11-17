@@ -67,7 +67,21 @@
           </form>
         {% else %}
           <h2 class="h5">Supprimer mon compte</h2>
-          <p class="text-secondary">Supprime définitivement ton compte. (Bientôt)</p>
+          <div class="alert-wander mb-3">
+            <strong>Attention, cette action est définitive.</strong>
+            Seront supprimés : ton compte, tes lieux (avec leurs photos), tes sorties, tes avis,
+            tes listes et tes signalements. Les avis des autres membres sur tes lieux seront
+            supprimés avec eux.
+          </div>
+          <form method="post" action="{{ url_for('supprimer_compte') }}"
+                onsubmit="return confirm('Supprimer définitivement ton compte et tout ce que tu as créé ?');">
+            <div class="mb-3">
+              <label for="mot_de_passe" class="form-label">Saisis ton mot de passe pour confirmer</label>
+              <input type="password" class="form-control" id="mot_de_passe"
+                     name="mot_de_passe" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-outline-wander">Supprimer mon compte</button>
+          </form>
         {% endif %}
       </div>
     </div>

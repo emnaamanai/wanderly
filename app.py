@@ -432,6 +432,33 @@ def modifier_mot_de_passe():
 
     return redirect(url_for("parametres", section="mot-de-passe"))
 
+@app.route("/parametres/supprimer-compte", methods=["POST"])
+@login_required
+def supprimer_compte():
+    mot_de_passe = request.form["mot_de_passe"]
+    if not check_password_hash(g.utilisateur["mot_de_passe_hash"], mot_de_passe):
+        flash("Mot de passe incorrect : ton compte n'a pas été supprimé.")
+        return redirect(url_for("parametres", section="supprimer"))
+
+    base = db.get_db()
+    moi = g.utilisateur["id"]
+
+    # 1. Supprimer mes lieux (avec leurs photos), un par un
+    mes_lieux = base.execute(
+        "SELECT id FROM lieu WHERE auteur_id = ?", (moi,)
+    ).fetchall()
+    for lieu in mes_lieux:
+        effacer_lieu(base, lieu["id"])
+
+    # 2. Supprimer le compte : mes avis, mes listes, mes sorties et mes
+    #    signalements partent avec lui (ON DELETE CASCADE)
+    base.execute("DELETE FROM utilisateur WHERE id = ?", (moi,))
+    base.commit()
+
+    session.clear()
+    flash("Ton compte a été supprimé. À bientôt sur Wanderly !")
+    return redirect(url_for("accueil"))
+
 
 # ---------- Lieux ----------
 @app.route("/lieux/ajouter", methods=["GET", "POST"])
