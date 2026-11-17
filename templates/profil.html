@@ -11,12 +11,13 @@
     <div>
       <h1 class="h3 mb-1">{{ g.utilisateur.pseudo }}</h1>
       <div class="text-secondary small">
-        Membre depuis le {{ g.utilisateur.date_inscription }} · {{ g.utilisateur.email }}
+        Membre depuis le {{ g.utilisateur.date_inscription }}
       </div>
     </div>
     <div class="ms-auto d-flex flex-wrap gap-2">
       <a class="btn btn-wander" href="{{ url_for('ajouter_lieu') }}">+ Ajouter un lieu</a>
       <a class="btn btn-outline-wander" href="{{ url_for('creer_sortie') }}">+ Créer une sortie</a>
+      <a class="btn btn-outline-wander" href="{{ url_for('parametres') }}">Paramètres</a>
     </div>
   </div>
 </section>

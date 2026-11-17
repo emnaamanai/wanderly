@@ -368,6 +368,16 @@ def profil():
         sorties_creees=sorties_creees,
         onglet=onglet,
     )
+SECTIONS_PARAMETRES = ["compte", "mot-de-passe", "supprimer"]
+
+
+@app.route("/parametres")
+@login_required
+def parametres():
+    section = request.args.get("section", "compte")
+    if section not in SECTIONS_PARAMETRES:
+        section = "compte"
+    return render_template("parametres.html", section=section)
 @app.route("/admin")
 @admin_required
 def admin():

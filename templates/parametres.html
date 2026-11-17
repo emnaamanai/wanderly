@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block titre %}Paramètres - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 960px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 wander-text mb-0">Paramètres</h1>
+    <a href="{{ url_for('profil') }}" class="text-decoration-none wander-text">&lsaquo; Retour au profil</a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Menu de gauche -->
+    <div class="col-md-4">
+      <nav class="parametres-menu">
+        <a class="parametres-lien {% if section == 'compte' %}actif{% endif %}"
+           href="{{ url_for('parametres', section='compte') }}">Compte <span>&rsaquo;</span></a>
+        <a class="parametres-lien {% if section == 'mot-de-passe' %}actif{% endif %}"
+           href="{{ url_for('parametres', section='mot-de-passe') }}">Mot de passe <span>&rsaquo;</span></a>
+        <hr class="my-1 mx-2">
+        <a class="parametres-lien {% if section == 'supprimer' %}actif{% endif %}"
+           href="{{ url_for('parametres', section='supprimer') }}">Supprimer mon compte <span>&rsaquo;</span></a>
+      </nav>
+    </div>
+
+    <!-- Contenu de la section choisie -->
+    <div class="col-md-8">
+      <div class="parametres-contenu">
+        {% if section == 'compte' %}
+          <h2 class="h5">Compte</h2>
+          <p class="text-secondary">Modifie ton pseudo et ton adresse e-mail. (Bientôt)</p>
+        {% elif section == 'mot-de-passe' %}
+          <h2 class="h5">Mot de passe</h2>
+          <p class="text-secondary">Change ton mot de passe. (Bientôt)</p>
+        {% else %}
+          <h2 class="h5">Supprimer mon compte</h2>
+          <p class="text-secondary">Supprime définitivement ton compte. (Bientôt)</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
