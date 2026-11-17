@@ -122,6 +122,15 @@ CREATE TABLE signalement (
     CHECK ((lieu_id IS NULL) <> (avis_id IS NULL))
 );
 
+-- ---------- Abonnements (un membre en suit un autre) ----------
+CREATE TABLE abonnement (
+    suiveur_id       INTEGER NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+    suivi_id         INTEGER NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+    date_abonnement  TEXT NOT NULL DEFAULT (date('now')),
+    PRIMARY KEY (suiveur_id, suivi_id),
+    CHECK (suiveur_id <> suivi_id)        -- on ne peut pas se suivre soi-même
+);
+
 -- ---------- Données de départ (modifiables ensuite par l'administrateur) ----------
 INSERT INTO categorie (nom) VALUES
     ('Café'), ('Plage'), ('Parc'), ('Randonnée'), ('Espace de jeux'), ('Pique-nique');

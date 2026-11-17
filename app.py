@@ -401,14 +401,74 @@ def voir_membre(membre_id):
         (membre_id,),
     ).fetchall()
 
+    je_suis = False
+    if g.utilisateur and g.utilisateur["id"] != membre_id:
+        ligne = base.execute(
+            "SELECT 1 FROM abonnement WHERE suiveur_id = ? AND suivi_id = ?",
+            (g.utilisateur["id"], membre_id),
+        ).fetchone()
+        je_suis = ligne is not None
+
+    nb_abonnes = base.execute(
+        "SELECT COUNT(*) FROM abonnement WHERE suivi_id = ?", (membre_id,)
+    ).fetchone()[0]
+
     return render_template(
         "membre.html",
         membre=membre,
         lieux_membre=lieux_membre,
         sorties_membre=sorties_membre,
         onglet=onglet,
+        je_suis=je_suis,
+        nb_abonnes=nb_abonnes,
     )
 
+@app.route("/membre/<int:membre_id>/suivre", methods=["POST"])
+@login_required
+def suivre_membre(membre_id):
+    base = db.get_db()
+    moi = g.utilisateur["id"]
+
+    membre = base.execute(
+        "SELECT id FROM utilisateur WHERE id = ?", (membre_id,)
+    ).fetchone()
+    if membre is None:
+        abort(404)
+    if membre_id == moi:
+        abort(403)
+
+    action = request.form.get("action")
+
+    if action == "suivre":
+        base.execute(
+            "INSERT OR IGNORE INTO abonnement (suiveur_id, suivi_id) VALUES (?, ?)",
+            (moi, membre_id),
+        )
+    elif action == "ne_plus_suivre":
+        base.execute(
+            "DELETE FROM abonnement WHERE suiveur_id = ? AND suivi_id = ?",
+            (moi, membre_id),
+        )
+    else:
+        abort(400)
+
+    base.commit()
+    return redirect(url_for("voir_membre", membre_id=membre_id))
+
+@app.route("/abonnements")
+@login_required
+def mes_abonnements():
+    suivis = db.get_db().execute(
+        "SELECT utilisateur.id, utilisateur.pseudo, abonnement.date_abonnement, "
+        "(SELECT COUNT(*) FROM lieu WHERE lieu.auteur_id = utilisateur.id) AS nb_lieux, "
+        "(SELECT COUNT(*) FROM sortie WHERE sortie.auteur_id = utilisateur.id) AS nb_sorties "
+        "FROM abonnement "
+        "JOIN utilisateur ON abonnement.suivi_id = utilisateur.id "
+        "WHERE abonnement.suiveur_id = ? "
+        "ORDER BY abonnement.date_abonnement DESC, utilisateur.pseudo",
+        (g.utilisateur["id"],),
+    ).fetchall()
+    return render_template("abonnements.html", suivis=suivis)
 
 SECTIONS_PARAMETRES = ["compte", "mot-de-passe", "supprimer"]
 
@@ -1148,4 +1208,37 @@ def recommandations():
         (moi, moi, moi, moi),
     ).fetchall()
 
-    return render_template("recommandations.html", lieux=lieux, tags_aimes=tags_aimes)
+    onglet_suivis = request.args.get("onglet_suivis", "lieux")
+    if onglet_suivis not in ("lieux", "sorties"):
+        onglet_suivis = "lieux"
+
+    # Nouveautés des membres que je suis
+    lieux_suivis = base.execute(
+        "SELECT lieu.*, categorie.nom AS categorie, utilisateur.pseudo AS auteur "
+        "FROM lieu "
+        "JOIN categorie ON lieu.categorie_id = categorie.id "
+        "JOIN utilisateur ON lieu.auteur_id = utilisateur.id "
+        "WHERE lieu.auteur_id IN (SELECT suivi_id FROM abonnement WHERE suiveur_id = ?) "
+        "ORDER BY lieu.id DESC LIMIT 6",
+        (moi,),
+    ).fetchall()
+
+    sorties_suivies = base.execute(
+        "SELECT sortie.*, utilisateur.pseudo AS auteur, "
+        "COUNT(sortie_lieu.lieu_id) AS nb_lieux "
+        "FROM sortie "
+        "JOIN utilisateur ON sortie.auteur_id = utilisateur.id "
+        "LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
+        "WHERE sortie.auteur_id IN (SELECT suivi_id FROM abonnement WHERE suiveur_id = ?) "
+        "GROUP BY sortie.id ORDER BY sortie.id DESC LIMIT 6",
+        (moi,),
+    ).fetchall()
+
+    return render_template(
+        "recommandations.html",
+        lieux=lieux,
+        tags_aimes=tags_aimes,
+        lieux_suivis=lieux_suivis,
+        sorties_suivies=sorties_suivies,
+        onglet_suivis=onglet_suivis,
+    )

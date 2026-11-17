@@ -38,7 +38,69 @@
     {% endfor %}
   </div>
   {% elif tags_aimes %}
+  {% elif tags_aimes %}
   <p>Aucune nouvelle suggestion pour l'instant : tu as déjà exploré les lieux qui te ressemblent.</p>
+  {% endif %}
+
+  <hr class="my-5">
+
+  <h2 class="h4 wander-text mb-1">Nouveautés des membres que tu suis</h2>
+  <p class="text-secondary mb-4">
+    <a class="wander-text" href="{{ url_for('mes_abonnements') }}">Voir mes abonnements</a>
+  </p>
+
+  <div class="onglets-wander mb-4">
+    <a href="{{ url_for('recommandations', onglet_suivis='lieux') }}"
+       class="onglet-wander {% if onglet_suivis == 'lieux' %}actif{% endif %}">Lieux ({{ lieux_suivis|length }})</a>
+    <a href="{{ url_for('recommandations', onglet_suivis='sorties') }}"
+       class="onglet-wander {% if onglet_suivis == 'sorties' %}actif{% endif %}">Sorties ({{ sorties_suivies|length }})</a>
+  </div>
+
+  {% if onglet_suivis == 'lieux' %}
+
+    {% if lieux_suivis %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for lieu in lieux_suivis %}
+      <div class="col">
+        <div class="card carte-lieu h-100">
+          <div class="card-body">
+            <span class="badge-wander">{{ lieu.categorie }}</span>
+            <h3 class="h5 mt-2">
+              <a class="stretched-link text-decoration-none lien-lieu" href="{{ url_for('voir_lieu', lieu_id=lieu.id) }}">{{ lieu.nom }}</a>
+            </h3>
+            <p class="text-secondary small mb-2">Ajouté par {{ lieu.auteur }} · {{ lieu.region }} · {{ lieu|fourchette }}</p>
+            <p class="card-text">{{ lieu.description }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-secondary">Aucun nouveau lieu. Suis des membres pour voir ici leurs derniers lieux.</p>
+    {% endif %}
+
+  {% else %}
+
+    {% if sorties_suivies %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for s in sorties_suivies %}
+      <div class="col">
+        <div class="card carte-lieu h-100">
+          <div class="card-body">
+            <h3 class="h5">
+              <a class="stretched-link text-decoration-none lien-lieu" href="{{ url_for('voir_sortie', sortie_id=s.id) }}">{{ s.titre }}</a>
+            </h3>
+            <p class="text-secondary small mb-2">Par {{ s.auteur }} · {{ s.nb_lieux }} lieu{{ 'x' if s.nb_lieux > 1 }} · {{ s|fourchette }}</p>
+            {% if s.description %}<p class="card-text">{{ s.description }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-secondary">Aucune nouvelle sortie. Suis des membres pour voir ici leurs dernières sorties.</p>
+    {% endif %}
+
   {% endif %}
 </div>
 {% endblock %}

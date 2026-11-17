@@ -12,8 +12,21 @@
       <h1 class="h3 mb-1">{{ membre.pseudo }}</h1>
       <div class="text-secondary small">
         Membre depuis le {{ membre.date_inscription }}
+        · {{ nb_abonnes }} abonné{{ 's' if nb_abonnes > 1 }}
       </div>
     </div>
+
+    {% if g.utilisateur and g.utilisateur.id != membre.id %}
+    <form method="post" action="{{ url_for('suivre_membre', membre_id=membre.id) }}" class="ms-auto">
+      {% if je_suis %}
+      <input type="hidden" name="action" value="ne_plus_suivre">
+      <button type="submit" class="btn btn-outline-wander">Ne plus suivre</button>
+      {% else %}
+      <input type="hidden" name="action" value="suivre">
+      <button type="submit" class="btn btn-wander">Suivre</button>
+      {% endif %}
+    </form>
+    {% endif %}
   </div>
 </section>
 
