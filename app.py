@@ -382,7 +382,29 @@ def parametres():
 @admin_required
 def admin():
     return render_template("admin.html")
+@app.route("/parametres/compte", methods=["POST"])
+@login_required
+def modifier_compte():
+    pseudo = request.form["pseudo"].strip()
+    email = request.form["email"].strip()
 
+    if not pseudo or len(pseudo) > 30 or "@" not in email:
+        flash("Merci de remplir correctement le pseudo et l'e-mail.")
+        return redirect(url_for("parametres", section="compte"))
+
+    base = db.get_db()
+    try:
+        base.execute(
+            "UPDATE utilisateur SET pseudo = ?, email = ? WHERE id = ?",
+            (pseudo, email, g.utilisateur["id"]),
+        )
+        base.commit()
+    except sqlite3.IntegrityError:
+        flash("Ce pseudo ou cet e-mail est déjà utilisé.")
+        return redirect(url_for("parametres", section="compte"))
+
+    flash("Ton compte a été mis à jour.")
+    return redirect(url_for("parametres", section="compte"))
 
 # ---------- Lieux ----------
 @app.route("/lieux/ajouter", methods=["GET", "POST"])

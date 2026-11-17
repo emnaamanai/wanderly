@@ -28,7 +28,21 @@
       <div class="parametres-contenu">
         {% if section == 'compte' %}
           <h2 class="h5">Compte</h2>
-          <p class="text-secondary">Modifie ton pseudo et ton adresse e-mail. (Bientôt)</p>
+          <p class="text-secondary">Modifie ton pseudo et ton adresse e-mail.</p>
+          <form method="post" action="{{ url_for('modifier_compte') }}">
+            <div class="mb-3">
+              <label for="pseudo" class="form-label">Pseudo</label>
+              <input type="text" class="form-control" id="pseudo" name="pseudo"
+                     value="{{ g.utilisateur.pseudo }}" maxlength="30" required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Adresse e-mail</label>
+              <input type="email" class="form-control" id="email" name="email"
+                     value="{{ g.utilisateur.email }}" required>
+              <div class="form-text">Ton e-mail n'est jamais visible par les autres membres.</div>
+            </div>
+            <button type="submit" class="btn btn-wander">Enregistrer</button>
+          </form>
         {% elif section == 'mot-de-passe' %}
           <h2 class="h5">Mot de passe</h2>
           <p class="text-secondary">Change ton mot de passe. (Bientôt)</p>
