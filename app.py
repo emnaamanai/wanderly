@@ -120,6 +120,15 @@ def charger_utilisateur():
             "SELECT * FROM utilisateur WHERE id = ?", (utilisateur_id,)
         ).fetchone()
 
+@app.context_processor
+def compter_notifications():
+    if g.get("utilisateur") is None:
+        return {"nb_notifications": 0}
+    nb = db.get_db().execute(
+        "SELECT COUNT(*) FROM notification WHERE destinataire_id = ? AND lue = 0",
+        (g.utilisateur["id"],),
+    ).fetchone()[0]
+    return {"nb_notifications": nb}
 
 # ---------- Accueil ----------
 @app.route("/")
@@ -450,10 +459,17 @@ def suivre_membre(membre_id):
     action = request.form.get("action")
 
     if action == "suivre":
-        base.execute(
+        curseur = base.execute(
             "INSERT OR IGNORE INTO abonnement (suiveur_id, suivi_id) VALUES (?, ?)",
             (moi, membre_id),
         )
+        # rowcount vaut 1 si la ligne vient d'être créée, 0 si je suivais déjà
+        if curseur.rowcount == 1:
+            base.execute(
+                "INSERT INTO notification (destinataire_id, acteur_id, type) "
+                "VALUES (?, ?, 'abonnement')",
+                (membre_id, moi),
+            )
     elif action == "ne_plus_suivre":
         base.execute(
             "DELETE FROM abonnement WHERE suiveur_id = ? AND suivi_id = ?",
@@ -479,6 +495,31 @@ def mes_abonnements():
         (g.utilisateur["id"],),
     ).fetchall()
     return render_template("abonnements.html", suivis=suivis)
+
+@app.route("/notifications")
+@login_required
+def notifications():
+    base = db.get_db()
+    moi = g.utilisateur["id"]
+
+    liste = base.execute(
+        "SELECT notification.*, utilisateur.pseudo AS acteur, lieu.nom AS lieu_nom "
+        "FROM notification "
+        "JOIN utilisateur ON notification.acteur_id = utilisateur.id "
+        "LEFT JOIN lieu ON notification.lieu_id = lieu.id "
+        "WHERE notification.destinataire_id = ? "
+        "ORDER BY notification.id DESC LIMIT 50",
+        (moi,),
+    ).fetchall()
+
+    # On garde les lignes lues en mémoire, puis on marque tout comme lu
+    base.execute(
+        "UPDATE notification SET lue = 1 WHERE destinataire_id = ? AND lue = 0",
+        (moi,),
+    )
+    base.commit()
+
+    return render_template("notifications.html", liste=liste)
 
 SECTIONS_PARAMETRES = ["compte", "mot-de-passe", "supprimer"]
 
@@ -813,6 +854,12 @@ def ajouter_avis(lieu_id):
             "INSERT INTO avis (note, commentaire, date_visite, auteur_id, lieu_id) "
             "VALUES (?, ?, ?, ?, ?)",
             (note, commentaire, date_visite.isoformat(), g.utilisateur["id"], lieu_id),
+        )
+        # On prévient l'auteur du lieu (même transaction que l'avis)
+        base.execute(
+            "INSERT INTO notification (destinataire_id, acteur_id, type, lieu_id) "
+            "VALUES (?, ?, 'avis', ?)",
+            (lieu["auteur_id"], g.utilisateur["id"], lieu_id),
         )
         base.commit()
     except sqlite3.IntegrityError:
