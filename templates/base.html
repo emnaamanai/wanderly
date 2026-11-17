@@ -17,12 +17,12 @@
       {% if g.utilisateur %}
       <div class="d-flex align-items-center gap-2">
 
-        {% if request.endpoint == 'accueil' and request.args.get('onglet') == 'sorties'
-              or request.endpoint in ('voir_sortie', 'creer_sortie', 'modifier_sortie') %}
-          <a class="btn btn-wander" href="{{ url_for('creer_sortie') }}">+ Créer une sortie</a>
-        {% else %}
-          <a class="btn btn-wander" href="{{ url_for('ajouter_lieu') }}">+ Ajouter un lieu</a>
-        {% endif %}
+        <a class="btn btn-wander" href="{{ url_for('ajouter_lieu') }}">
+          + <span class="d-none d-sm-inline">Ajouter un </span>lieu
+        </a>
+        <a class="btn btn-outline-wander" href="{{ url_for('creer_sortie') }}">
+          + <span class="d-none d-sm-inline">Créer une </span>sortie
+        </a>
 
         <div class="dropdown">
           <button class="btn btn-outline-wander" type="button"
