@@ -19,7 +19,9 @@
     </div>
     <div class="mb-3">
       <label for="mot_de_passe" class="form-label">Mot de passe</label>
-      <input type="password" class="form-control" id="mot_de_passe" name="mot_de_passe" required>
+      <input type="password" class="form-control" id="mot_de_passe" name="mot_de_passe"
+             minlength="8" autocomplete="new-password" required>
+      <div class="form-text">Au moins 8 caractères.</div>
     </div>
     <button type="submit" class="btn btn-wander w-100">S'inscrire</button>
   </form>

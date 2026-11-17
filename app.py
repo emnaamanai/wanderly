@@ -302,6 +302,11 @@ def inscription():
         email = request.form["email"]
         mot_de_passe = request.form["mot_de_passe"]
 
+        if len(mot_de_passe) < LONGUEUR_MIN_MOT_DE_PASSE:
+            erreur = ("Le mot de passe doit contenir au moins "
+                      + str(LONGUEUR_MIN_MOT_DE_PASSE) + " caractères.")
+            return render_template("inscription.html", erreur=erreur)
+
         mot_de_passe_hash = generate_password_hash(mot_de_passe)
 
         base = db.get_db()
