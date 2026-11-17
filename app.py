@@ -530,7 +530,14 @@ def parametres():
     section = request.args.get("section", "compte")
     if section not in SECTIONS_PARAMETRES:
         section = "compte"
-    return render_template("parametres.html", section=section)
+    dernier_admin = False
+    if g.utilisateur["role"] == "admin":
+        nb_admins = db.get_db().execute(
+            "SELECT COUNT(*) FROM utilisateur WHERE role = 'admin'"
+        ).fetchone()[0]
+        dernier_admin = nb_admins <= 1
+
+    return render_template("parametres.html", section=section, dernier_admin=dernier_admin)
 @app.route("/admin")
 @admin_required
 def admin():
@@ -588,6 +595,13 @@ def modifier_mot_de_passe():
 @app.route("/parametres/supprimer-compte", methods=["POST"])
 @login_required
 def supprimer_compte():
+    if g.utilisateur["role"] == "admin":
+        nb_admins = db.get_db().execute(
+            "SELECT COUNT(*) FROM utilisateur WHERE role = 'admin'"
+        ).fetchone()[0]
+        if nb_admins <= 1:
+            abort(403)
+
     mot_de_passe = request.form["mot_de_passe"]
     if not check_password_hash(g.utilisateur["mot_de_passe_hash"], mot_de_passe):
         flash("Mot de passe incorrect : ton compte n'a pas été supprimé.")

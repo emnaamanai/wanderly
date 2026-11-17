@@ -67,6 +67,11 @@
           </form>
         {% else %}
           <h2 class="h5">Supprimer mon compte</h2>
+          {% if dernier_admin %}
+          <div class="alert-wander">
+            Tu es le seul administrateur : tu ne peux pas supprimer ton compte, car Wanderly a besoin d'au moins un administrateur pour traiter les signalements.
+          </div>
+          {% else %}
           <div class="alert-wander mb-3">
             <strong>Attention, cette action est définitive.</strong>
             Seront supprimés : ton compte, tes lieux (avec leurs photos), tes sorties, tes avis,
@@ -82,6 +87,7 @@
             </div>
             <button type="submit" class="btn btn-outline-wander">Supprimer mon compte</button>
           </form>
+          {% endif %}
         {% endif %}
       </div>
     </div>
