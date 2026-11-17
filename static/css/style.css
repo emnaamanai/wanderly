@@ -194,3 +194,67 @@ body {
   color: #FFFFFF;
   font-weight: 600;
 }
+/* ---------- Page profil ---------- */
+
+/* Bandeau lilas en haut du profil */
+.profil-bandeau {
+  background: #EFE8F8;
+  padding: 2.5rem 0;
+}
+
+/* Avatar rond avec l'initiale du pseudo */
+.profil-avatar {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: #6B4C9A;
+  color: #FFFFFF;
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid #FFFFFF;
+  flex-shrink: 0;
+}
+
+/* Onglets soulignés (Mes lieux / Mes sorties) */
+.profil-onglets {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid #E3D9F2;
+}
+.profil-onglet {
+  padding: 0.75rem 0.25rem;
+  color: #8A8499;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+.profil-onglet:hover {
+  color: #6B4C9A;
+}
+.profil-onglet.actif {
+  color: #6B4C9A;
+  border-bottom-color: #6B4C9A;
+}
+
+/* Photo en haut d'une carte de lieu */
+.profil-photo {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 1rem 1rem 0 0;
+}
+/* Remplaçant quand le lieu n'a pas de photo */
+.profil-photo-vide {
+  height: 160px;
+  background: #EFE8F8;
+  color: #6B4C9A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem 1rem 0 0;
+  font-size: 0.9rem;
+}

@@ -340,9 +340,34 @@ def deconnexion():
 @app.route("/profil")
 @login_required
 def profil():
-    return render_template("profil.html")
+    base = db.get_db()
 
+    onglet = request.args.get("onglet", "lieux")
+    if onglet not in ("lieux", "sorties"):
+        onglet = "lieux"
 
+    lieux_ajoutes = base.execute(
+        "SELECT lieu.*, categorie.nom AS categorie, "
+        "(SELECT nom_fichier FROM photo WHERE photo.lieu_id = lieu.id "
+        " ORDER BY id LIMIT 1) AS photo "
+        "FROM lieu JOIN categorie ON lieu.categorie_id = categorie.id "
+        "WHERE lieu.auteur_id = ? ORDER BY lieu.id DESC",
+        (g.utilisateur["id"],),
+    ).fetchall()
+
+    sorties_creees = base.execute(
+        "SELECT sortie.*, COUNT(sortie_lieu.lieu_id) AS nb_lieux "
+        "FROM sortie LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
+        "WHERE sortie.auteur_id = ? GROUP BY sortie.id ORDER BY sortie.id DESC",
+        (g.utilisateur["id"],),
+    ).fetchall()
+
+    return render_template(
+        "profil.html",
+        lieux_ajoutes=lieux_ajoutes,
+        sorties_creees=sorties_creees,
+        onglet=onglet,
+    )
 @app.route("/admin")
 @admin_required
 def admin():
