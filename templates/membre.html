@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ membre.pseudo }} - Wanderly{% endblock %}
+
+{% block contenu %}
+
+<!-- Bandeau lilas : avatar, pseudo, date d'inscription -->
+<section class="profil-bandeau">
+  <div class="container d-flex flex-wrap align-items-center gap-3">
+    <div class="profil-avatar">{{ membre.pseudo[0]|upper }}</div>
+    <div>
+      <h1 class="h3 mb-1">{{ membre.pseudo }}</h1>
+      <div class="text-secondary small">
+        Membre depuis le {{ membre.date_inscription }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container my-4">
+
+  <!-- Onglets -->
+  <div class="profil-onglets mb-4">
+    <a class="profil-onglet {% if onglet == 'lieux' %}actif{% endif %}"
+       href="{{ url_for('voir_membre', membre_id=membre.id, onglet='lieux') }}">Lieux ({{ lieux_membre|length }})</a>
+    <a class="profil-onglet {% if onglet == 'sorties' %}actif{% endif %}"
+       href="{{ url_for('voir_membre', membre_id=membre.id, onglet='sorties') }}">Sorties ({{ sorties_membre|length }})</a>
+  </div>
+
+  {% if onglet == 'lieux' %}
+
+    {% if lieux_membre %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for lieu in lieux_membre %}
+      <div class="col">
+        <div class="card carte-lieu h-100">
+          {% if lieu.photo %}
+          <img class="profil-photo" src="{{ url_for('static', filename='uploads/' + lieu.photo) }}"
+               alt="Photo de {{ lieu.nom }}">
+          {% else %}
+          <div class="profil-photo-vide">Pas de photo</div>
+          {% endif %}
+          <div class="card-body">
+            <h2 class="h6">
+              <a class="stretched-link text-decoration-none lien-lieu fw-semibold"
+                 href="{{ url_for('voir_lieu', lieu_id=lieu.id) }}">{{ lieu.nom }}</a>
+            </h2>
+            <p class="text-secondary small mb-2">{{ lieu.categorie }} · {{ lieu.region }}</p>
+            <span class="badge-wander">{{ lieu|fourchette }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-secondary">{{ membre.pseudo }} n'a pas encore ajouté de lieu.</p>
+    {% endif %}
+
+  {% else %}
+
+    {% if sorties_membre %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for s in sorties_membre %}
+      <div class="col">
+        <div class="card carte-lieu h-100">
+          <div class="card-body">
+            <h2 class="h6">
+              <a class="stretched-link text-decoration-none lien-lieu fw-semibold"
+                 href="{{ url_for('voir_sortie', sortie_id=s.id) }}">{{ s.titre }}</a>
+            </h2>
+            <div class="mt-2">
+              <span class="badge-wander me-1">{{ s.nb_lieux }} lieu{{ 'x' if s.nb_lieux > 1 }}</span>
+              <span class="badge-wander me-1">{{ s|fourchette }}</span>
+              {% if s.duree %}<span class="badge-wander me-1">{{ s.duree }}</span>{% endif %}
+              {% if s.saison %}<span class="badge-wander me-1">{{ s.saison }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-secondary">{{ membre.pseudo }} n'a pas encore créé de sortie.</p>
+    {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}

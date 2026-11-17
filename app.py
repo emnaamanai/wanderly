@@ -368,6 +368,48 @@ def profil():
         sorties_creees=sorties_creees,
         onglet=onglet,
     )
+
+@app.route("/membre/<int:membre_id>")
+def voir_membre(membre_id):
+    base = db.get_db()
+
+    # On ne lit QUE l'id, le pseudo et la date d'inscription : jamais l'e-mail
+    membre = base.execute(
+        "SELECT id, pseudo, date_inscription FROM utilisateur WHERE id = ?",
+        (membre_id,),
+    ).fetchone()
+    if membre is None:
+        abort(404)
+
+    onglet = request.args.get("onglet", "lieux")
+    if onglet not in ("lieux", "sorties"):
+        onglet = "lieux"
+
+    lieux_membre = base.execute(
+        "SELECT lieu.*, categorie.nom AS categorie, "
+        "(SELECT nom_fichier FROM photo WHERE photo.lieu_id = lieu.id "
+        " ORDER BY id LIMIT 1) AS photo "
+        "FROM lieu JOIN categorie ON lieu.categorie_id = categorie.id "
+        "WHERE lieu.auteur_id = ? ORDER BY lieu.id DESC",
+        (membre_id,),
+    ).fetchall()
+
+    sorties_membre = base.execute(
+        "SELECT sortie.*, COUNT(sortie_lieu.lieu_id) AS nb_lieux "
+        "FROM sortie LEFT JOIN sortie_lieu ON sortie_lieu.sortie_id = sortie.id "
+        "WHERE sortie.auteur_id = ? GROUP BY sortie.id ORDER BY sortie.id DESC",
+        (membre_id,),
+    ).fetchall()
+
+    return render_template(
+        "membre.html",
+        membre=membre,
+        lieux_membre=lieux_membre,
+        sorties_membre=sorties_membre,
+        onglet=onglet,
+    )
+
+
 SECTIONS_PARAMETRES = ["compte", "mot-de-passe", "supprimer"]
 
 

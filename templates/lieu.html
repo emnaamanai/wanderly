@@ -15,7 +15,7 @@
     <h1 class="h2 mt-2">{{ lieu.nom }}</h1>
     <p class="text-secondary">
       {{ lieu.region }} · {{ lieu|fourchette }}
-      · Ajouté par {{ lieu.auteur }}
+      · Ajouté par <a class="wander-text text-decoration-none fw-semibold" href="{{ url_for('voir_membre', membre_id=lieu.auteur_id) }}">{{ lieu.auteur }}</a>
     </p>
         {% if tags %}
     <div class="mb-2">
