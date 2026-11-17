@@ -121,8 +121,11 @@ def charger_utilisateur():
         ).fetchone()
         # Compte suspendu (ou supprimé) : on déconnecte
         if g.utilisateur is None or g.utilisateur["est_suspendu"] == 1:
+            etait_suspendu = g.utilisateur is not None
             session.clear()
             g.utilisateur = None
+            if etait_suspendu:
+                flash("Ton compte a été suspendu : tu as été déconnecté.")
 
 @app.context_processor
 def compter_notifications():
