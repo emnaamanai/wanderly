@@ -45,7 +45,26 @@
           </form>
         {% elif section == 'mot-de-passe' %}
           <h2 class="h5">Mot de passe</h2>
-          <p class="text-secondary">Change ton mot de passe. (Bientôt)</p>
+          <p class="text-secondary">Pour ta sécurité, saisis d'abord ton mot de passe actuel.</p>
+          <form method="post" action="{{ url_for('modifier_mot_de_passe') }}">
+            <div class="mb-3">
+              <label for="mot_de_passe_actuel" class="form-label">Mot de passe actuel</label>
+              <input type="password" class="form-control" id="mot_de_passe_actuel"
+                     name="mot_de_passe_actuel" autocomplete="current-password" required>
+            </div>
+            <div class="mb-3">
+              <label for="nouveau_mot_de_passe" class="form-label">Nouveau mot de passe</label>
+              <input type="password" class="form-control" id="nouveau_mot_de_passe"
+                     name="nouveau_mot_de_passe" minlength="8" autocomplete="new-password" required>
+              <div class="form-text">Au moins 8 caractères.</div>
+            </div>
+            <div class="mb-3">
+              <label for="confirmation" class="form-label">Confirme le nouveau mot de passe</label>
+              <input type="password" class="form-control" id="confirmation"
+                     name="confirmation" minlength="8" autocomplete="new-password" required>
+            </div>
+            <button type="submit" class="btn btn-wander">Changer le mot de passe</button>
+          </form>
         {% else %}
           <h2 class="h5">Supprimer mon compte</h2>
           <p class="text-secondary">Supprime définitivement ton compte. (Bientôt)</p>

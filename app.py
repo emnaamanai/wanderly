@@ -31,7 +31,7 @@ GOUVERNORATS = [
 MOTIFS = ["fermé", "doublon", "information fausse", "contenu inapproprié"]
 MOTIFS_AVIS = ["information fausse", "contenu inapproprié"]
 SAISONS = ["printemps", "été", "automne", "hiver", "toute l'année"]
-
+LONGUEUR_MIN_MOT_DE_PASSE = 8
 
 @app.errorhandler(413)
 def fichier_trop_lourd(erreur):
@@ -405,6 +405,33 @@ def modifier_compte():
 
     flash("Ton compte a été mis à jour.")
     return redirect(url_for("parametres", section="compte"))
+
+
+@app.route("/parametres/mot-de-passe", methods=["POST"])
+@login_required
+def modifier_mot_de_passe():
+    actuel = request.form["mot_de_passe_actuel"]
+    nouveau = request.form["nouveau_mot_de_passe"]
+    confirmation = request.form["confirmation"]
+
+    if not check_password_hash(g.utilisateur["mot_de_passe_hash"], actuel):
+        flash("Le mot de passe actuel est incorrect.")
+    elif len(nouveau) < LONGUEUR_MIN_MOT_DE_PASSE:
+        flash("Le nouveau mot de passe doit contenir au moins "
+              + str(LONGUEUR_MIN_MOT_DE_PASSE) + " caractères.")
+    elif nouveau != confirmation:
+        flash("Les deux nouveaux mots de passe ne sont pas identiques.")
+    else:
+        base = db.get_db()
+        base.execute(
+            "UPDATE utilisateur SET mot_de_passe_hash = ? WHERE id = ?",
+            (generate_password_hash(nouveau), g.utilisateur["id"]),
+        )
+        base.commit()
+        flash("Ton mot de passe a été modifié.")
+
+    return redirect(url_for("parametres", section="mot-de-passe"))
+
 
 # ---------- Lieux ----------
 @app.route("/lieux/ajouter", methods=["GET", "POST"])
