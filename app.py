@@ -119,6 +119,10 @@ def charger_utilisateur():
         g.utilisateur = db.get_db().execute(
             "SELECT * FROM utilisateur WHERE id = ?", (utilisateur_id,)
         ).fetchone()
+        # Compte suspendu (ou supprimé) : on déconnecte
+        if g.utilisateur is None or g.utilisateur["est_suspendu"] == 1:
+            session.clear()
+            g.utilisateur = None
 
 @app.context_processor
 def compter_notifications():
@@ -332,7 +336,10 @@ def connexion():
             return render_template(
                 "connexion.html", erreur="Pseudo ou mot de passe incorrect."
             )
-
+        if utilisateur["est_suspendu"] == 1:
+            return render_template(
+                "connexion.html", erreur="Ce compte est suspendu."
+            )
         session.clear()
         session["utilisateur_id"] = utilisateur["id"]
         return redirect(url_for("accueil"))
