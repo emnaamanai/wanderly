@@ -1021,7 +1021,42 @@ def admin_signalements():
         "ORDER BY signalement.id DESC"
     ).fetchall()
     return render_template("admin_signalements.html", signalements=signalements)
+@app.route("/admin/utilisateurs")
+@admin_required
+def admin_utilisateurs():
+    membres = db.get_db().execute(
+        "SELECT id, pseudo, role, est_suspendu, date_inscription "
+        "FROM utilisateur ORDER BY pseudo"
+    ).fetchall()
+    return render_template("admin_utilisateurs.html", membres=membres)
 
+
+@app.route("/admin/utilisateurs/<int:membre_id>/suspendre", methods=["POST"])
+@admin_required
+def suspendre_membre(membre_id):
+    base = db.get_db()
+    membre = base.execute(
+        "SELECT id, role FROM utilisateur WHERE id = ?", (membre_id,)
+    ).fetchone()
+    if membre is None:
+        abort(404)
+    if membre["id"] == g.utilisateur["id"] or membre["role"] == "admin":
+        abort(403)
+
+    action = request.form.get("action")
+    if action == "suspendre":
+        valeur = 1
+    elif action == "reactiver":
+        valeur = 0
+    else:
+        abort(400)
+
+    base.execute(
+        "UPDATE utilisateur SET est_suspendu = ? WHERE id = ?", (valeur, membre_id)
+    )
+    base.commit()
+    flash("Compte suspendu." if valeur == 1 else "Compte réactivé.")
+    return redirect(url_for("admin_utilisateurs"))
 
 @app.route("/admin/signalements/<int:signalement_id>/conserver", methods=["POST"])
 @admin_required

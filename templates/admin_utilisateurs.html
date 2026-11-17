@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block titre %}Utilisateurs - Wanderly{% endblock %}
+
+{% block contenu %}
+<div class="container my-5" style="max-width: 800px;">
+  <h1 class="h3 wander-text mb-4">Gérer les utilisateurs</h1>
+
+  {% for m in membres %}
+  <div class="avis-carte mb-2 d-flex justify-content-between align-items-center gap-3">
+    <div>
+      <a class="lien-lieu fw-semibold text-decoration-none"
+         href="{{ url_for('voir_membre', membre_id=m.id) }}">{{ m.pseudo }}</a>
+      <div class="mt-1">
+        <span class="badge-wander me-1">{{ 'admin' if m.role == 'admin' else 'membre' }}</span>
+        <span class="badge-wander">{{ 'suspendu' if m.est_suspendu else 'actif' }}</span>
+      </div>
+      <div class="text-secondary small">Inscrit le {{ m.date_inscription }}</div>
+    </div>
+
+    {% if m.role != 'admin' and m.id != g.utilisateur.id %}
+    <form method="post" action="{{ url_for('suspendre_membre', membre_id=m.id) }}">
+      {% if m.est_suspendu %}
+      <input type="hidden" name="action" value="reactiver">
+      <button type="submit" class="btn btn-wander btn-sm">Réactiver</button>
+      {% else %}
+      <input type="hidden" name="action" value="suspendre">
+      <button type="submit" class="btn btn-outline-wander btn-sm">Suspendre</button>
+      {% endif %}
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
