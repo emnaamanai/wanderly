@@ -402,12 +402,21 @@ def voir_membre(membre_id):
     ).fetchall()
 
     je_suis = False
+    il_me_suit = False
     if g.utilisateur and g.utilisateur["id"] != membre_id:
         ligne = base.execute(
             "SELECT 1 FROM abonnement WHERE suiveur_id = ? AND suivi_id = ?",
             (g.utilisateur["id"], membre_id),
         ).fetchone()
         je_suis = ligne is not None
+
+        ligne = base.execute(
+            "SELECT 1 FROM abonnement WHERE suiveur_id = ? AND suivi_id = ?",
+            (membre_id, g.utilisateur["id"]),
+        ).fetchone()
+        il_me_suit = ligne is not None
+
+    sont_amis = je_suis and il_me_suit
 
     nb_abonnes = base.execute(
         "SELECT COUNT(*) FROM abonnement WHERE suivi_id = ?", (membre_id,)
@@ -421,6 +430,7 @@ def voir_membre(membre_id):
         onglet=onglet,
         je_suis=je_suis,
         nb_abonnes=nb_abonnes,
+        sont_amis=sont_amis,
     )
 
 @app.route("/membre/<int:membre_id>/suivre", methods=["POST"])

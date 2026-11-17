@@ -9,7 +9,9 @@
   <div class="container d-flex flex-wrap align-items-center gap-3">
     <div class="profil-avatar">{{ membre.pseudo[0]|upper }}</div>
     <div>
-      <h1 class="h3 mb-1">{{ membre.pseudo }}</h1>
+      <h1 class="h3 mb-1">{{ membre.pseudo }}
+        {% if sont_amis %}<span class="badge-wander ms-2">Amis</span>{% endif %}
+      </h1>
       <div class="text-secondary small">
         Membre depuis le {{ membre.date_inscription }}
         · {{ nb_abonnes }} abonné{{ 's' if nb_abonnes > 1 }}
